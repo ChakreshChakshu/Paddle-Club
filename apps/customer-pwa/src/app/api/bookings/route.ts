@@ -1,10 +1,8 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { PrismaClient } from '@paddle-club/db';
 
 const prisma = new PrismaClient();
-
-// In V1, we are using a hardcoded test user.
-const TEST_USER_PHONE = '1234567890';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -57,10 +55,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Cannot book a time slot in the past' }, { status: 400 });
     }
 
-    // Use hardcoded user for prototype
-    let user = await prisma.user.findUnique({ where: { phone: TEST_USER_PHONE } });
+    const userId = cookies().get('paddle_club_user_id')?.value;
+    if (!userId) {
+       return NextResponse.json({ error: 'Unauthorized: Please log in' }, { status: 401 });
+    }
+
+    let user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
-       return NextResponse.json({ error: 'Test user not found in DB' }, { status: 500 });
+       return NextResponse.json({ error: 'User not found in DB' }, { status: 500 });
     }
 
     const start = new Date(startTime);
