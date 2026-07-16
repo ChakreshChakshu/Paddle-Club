@@ -1,0 +1,58 @@
+# Dependencies
+node_modules
+/node_modules
+/.pnp
+.pnp.js
+
+# Testing
+/coverage
+
+# Next.js build outputs
+.next/
+out/
+
+# Production/Distribution build outputs
+build/
+dist/
+/dist
+
+# Turbo / Cache
+.turbo/
+*.tsbuildinfo
+
+# SQLite Database
+*.db
+*.db-journal
+packages/db/prisma/dev.db
+packages/db/prisma/dev.db-journal
+
+# Debug logs
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+lerna-debug.log*
+
+# Environment secrets
+.env
+.env.local
+.env.development.local
+.env.test.local
+.env.production.local
+*.env
+
+# IDEs and Editors
+.idea/
+.vscode/
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Temp / Helper scripts
+copy_assets.js

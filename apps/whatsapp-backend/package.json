@@ -1,0 +1,24 @@
+{
+  "name": "@paddle-club/whatsapp-backend",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "tsx watch src/index.ts",
+    "build": "tsc",
+    "start": "node dist/index.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "body-parser": "^1.20.2",
+    "dotenv": "^16.4.5",
+    "axios": "^1.6.8",
+    "@paddle-club/db": "*",
+    "@paddle-club/feature-flags": "*"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5",
+    "@types/express": "^4.17.21",
+    "@types/node": "^20.12.12",
+    "tsx": "^4.10.1"
+  }
+}

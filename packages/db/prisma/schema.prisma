@@ -1,0 +1,81 @@
+datasource db {
+  provider = "sqlite"
+  url      = "file:./dev.db"
+}
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+model User {
+  id        String    @id @default(uuid())
+  name      String?
+  email     String?   @unique
+  phone     String    @unique
+  role      String    @default("CUSTOMER") // "CUSTOMER" | "ADMIN" | "OWNER"
+  bookings  Booking[]
+  orders    Order[]
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+}
+
+model Court {
+  id          String    @id @default(uuid())
+  name        String
+  sportType   String    @default("PICKLEBALL") // "PICKLEBALL" | "PADEL"
+  surface     String    @default("Aesthetic Acrylic")
+  hourlyRate  Float
+  lighting    Boolean   @default(true)
+  bookings    Booking[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+}
+
+model Booking {
+  id            String   @id @default(uuid())
+  courtId       String
+  court         Court    @relation(fields: [courtId], references: [id])
+  userId        String
+  user          User     @relation(fields: [userId], references: [id])
+  startTime     DateTime
+  endTime       DateTime
+  status        String   @default("PENDING") // "PENDING" | "CONFIRMED" | "CANCELLED"
+  totalAmount   Float
+  paymentStatus String   @default("PENDING") // "PENDING" | "PAID" | "REFUNDED"
+  paymentId     String?  // Razorpay/UPI txn ID
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model MenuItem {
+  id          String   @id @default(uuid())
+  name        String
+  description String?
+  price       Float
+  category    String   // e.g., "Snacks", "Coffee", "Main Course"
+  imageUrl    String?
+  available   Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Order {
+  id          String   @id @default(uuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  items       String   // Serialized JSON array of { menuItemId, name, quantity, price }
+  totalAmount Float
+  status      String   @default("PENDING") // "PENDING" | "PREPARING" | "COMPLETED" | "CANCELLED"
+  tableNumber String?  // If ordering within Cafe Brio
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model WhatsAppMessage {
+  id        String   @id @default(uuid())
+  phone     String
+  direction String   // "INBOUND" or "OUTBOUND"
+  message   String
+  aiResult  String?  // Serialized JSON of extracted slot details or intents
+  timestamp DateTime @default(now())
+}

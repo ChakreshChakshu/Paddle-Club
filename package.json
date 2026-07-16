@@ -1,0 +1,18 @@
+{
+  "name": "the-paddle-club-monorepo",
+  "version": "1.0.0",
+  "private": true,
+  "description": "Monorepo for The Paddle Club Agra: Marketing Web, Customer PWA, Admin Panel, and WhatsApp Backend.",
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "scripts": {
+    "dev": "npm run dev --workspaces --if-present",
+    "build": "npm run build --workspaces --if-present",
+    "lint": "npm run lint --workspaces --if-present"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.5"
+  }
+}
