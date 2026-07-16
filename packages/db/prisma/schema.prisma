@@ -43,6 +43,20 @@ model Booking {
   totalAmount   Float
   paymentStatus String   @default("PENDING") // "PENDING" | "PAID" | "REFUNDED"
   paymentId     String?  // Razorpay/UPI txn ID
+  paymentSplits PaymentSplit[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model PaymentSplit {
+  id            String   @id @default(uuid())
+  bookingId     String
+  booking       Booking  @relation(fields: [bookingId], references: [id])
+  userId        String?  // Links to registered User if they exist
+  phone         String   // Phone number of the friend
+  amount        Float
+  status        String   @default("PENDING") // "PENDING" | "PAID"
+  paymentId     String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }

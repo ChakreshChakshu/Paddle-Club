@@ -475,6 +475,7 @@ export default function AdminDashboardPage() {
                           <tr>
                             <th className="px-6 py-4 text-[10px] font-bold text-slate-500 dark:text-white/40 uppercase tracking-widest">Player</th>
                             <th className="px-6 py-4 text-[10px] font-bold text-slate-500 dark:text-white/40 uppercase tracking-widest">Time Slot</th>
+                            <th className="px-6 py-4 text-[10px] font-bold text-slate-500 dark:text-white/40 uppercase tracking-widest">Payment</th>
                             <th className="px-6 py-4 text-[10px] font-bold text-slate-500 dark:text-white/40 uppercase tracking-widest">Status</th>
                             <th className="px-6 py-4 text-[10px] font-bold text-slate-500 dark:text-white/40 uppercase tracking-widest text-right">Actions</th>
                           </tr>
@@ -496,6 +497,15 @@ export default function AdminDashboardPage() {
                               <td className="px-6 py-4">
                                 <span className="font-semibold text-slate-800 dark:text-white/90 block text-sm">{formatDate(bk.startTime)}</span>
                                 <span className="text-[11px] text-slate-500 dark:text-white/50">{formatTime(bk.startTime, bk.endTime)}</span>
+                              </td>
+                              <td className="px-6 py-4">
+                                <span className={`inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold tracking-wider ${
+                                  bk.paymentStatus === 'PAID' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400' :
+                                  bk.paymentStatus === 'PARTIAL' ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400' :
+                                  'bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-white/40'
+                                }`}>
+                                  {bk.paymentStatus || 'PENDING'}
+                                </span>
                               </td>
                               <td className="px-6 py-4">{statusBadge(bk.status)}</td>
                               <td className="px-6 py-4 text-right">
@@ -553,7 +563,16 @@ export default function AdminDashboardPage() {
                                  <span className="text-[9px] text-slate-500 dark:text-white/40 tracking-wide">{bk.user.phone}</span>
                                </div>
                             </div>
-                            {statusBadge(bk.status)}
+                            <div className="flex flex-col items-end space-y-1">
+                              {statusBadge(bk.status)}
+                              <span className={`inline-flex items-center px-2 py-0.5 rounded text-[8px] font-bold tracking-wider ${
+                                  bk.paymentStatus === 'PAID' ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-500/20 dark:text-emerald-400' :
+                                  bk.paymentStatus === 'PARTIAL' ? 'bg-amber-100 text-amber-700 dark:bg-amber-500/20 dark:text-amber-400' :
+                                  'bg-slate-100 text-slate-600 dark:bg-white/10 dark:text-white/40'
+                                }`}>
+                                  {bk.paymentStatus || 'PENDING'}
+                              </span>
+                            </div>
                           </div>
                           
                           <div className="bg-slate-50 dark:bg-white/[0.01] rounded-xl p-3 mb-3 border border-slate-100 dark:border-white/[0.02]">

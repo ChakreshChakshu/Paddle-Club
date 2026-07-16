@@ -62,6 +62,12 @@ export default function CustomerPwaDashboard() {
   const [selectedDate, setSelectedDate] = React.useState<string>(dateCarousel[0].toISOString().split('T')[0]);
   
   const [selectedSlot, setSelectedSlot] = React.useState<string>('');
+  
+  // Split Billing States
+  const [isBookingModalOpen, setIsBookingModalOpen] = React.useState(false);
+  const [splitOption, setSplitOption] = React.useState<'full' | 'split'>('full');
+  const [splitPhones, setSplitPhones] = React.useState<string[]>(['', '', '']);
+  const [mockCheckoutSplitId, setMockCheckoutSplitId] = React.useState<string | null>(null);
 
   // States for fetched data
   const [courtsList, setCourtsList] = React.useState<any[]>([]);
@@ -155,14 +161,17 @@ export default function CustomerPwaDashboard() {
 
   const handleLoginSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!loginPhone || loginPhone.length < 10) return toast.error('Please enter a valid phone number');
+    const cleanPhone = loginPhone.replace(/\D/g, '');
+    if (!cleanPhone || cleanPhone.length !== 10) {
+      return toast.error('Please enter a valid 10-digit phone number');
+    }
     
     setIsLoggingIn(true);
     try {
       const res = await fetch('/api/auth/login', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ phone: loginPhone })
+        body: JSON.stringify({ phone: cleanPhone })
       });
       if (res.ok) {
         const data = await res.json();
@@ -262,10 +271,13 @@ export default function CustomerPwaDashboard() {
     return () => clearInterval(interval);
   }, [currentUser]);
 
-  const handleBookingSubmit = async (e: React.FormEvent) => {
+  const openBookingModal = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedCourt || !selectedSlot) return;
+    setIsBookingModalOpen(true);
+  };
 
+  const handleConfirmAndPay = async () => {
     setIsSubmitting(true);
     const [startStr] = selectedSlot.split(' - ');
     let hour = parseInt(startStr.split(':')[0]);
@@ -278,26 +290,71 @@ export default function CustomerPwaDashboard() {
     const end = new Date(start);
     end.setHours(hour + 1, 0, 0, 0);
 
+    let validSplitPhones: string[] = [];
+    if (splitOption === 'split') {
+      const activePhones = splitPhones.filter(p => p.trim().length > 0);
+      for (const p of activePhones) {
+        const cleanPhone = p.replace(/\D/g, '');
+        if (cleanPhone.length !== 10) {
+          toast.error('All friend phone numbers must be exactly 10 digits');
+          setIsSubmitting(false);
+          return;
+        }
+        validSplitPhones.push(cleanPhone);
+      }
+    }
+
     try {
       const res = await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ courtId: selectedCourt, startTime: start.toISOString(), endTime: end.toISOString() })
+        body: JSON.stringify({ courtId: selectedCourt, startTime: start.toISOString(), endTime: end.toISOString(), splitPhones: validSplitPhones })
       });
 
       if (res.ok) {
-        toast.success('Court booked successfully! Waiting for Admin confirmation.');
+        setIsBookingModalOpen(false);
+        const data = await res.json();
+        
+        // Find user's split to pay
+        const mySplit = data.booking.paymentSplits?.find((s: any) => s.phone === currentUser.phone);
+        if (mySplit) {
+          setMockCheckoutSplitId(mySplit.id);
+        } else {
+          toast.success('Court booked successfully! Waiting for payment.');
+        }
+
         setSelectedSlot('');
         // refetch
         const availabilityRes = await fetch(`/api/bookings?courtId=${selectedCourt}&date=${selectedDate}`);
-        const data = await availabilityRes.json();
-        setBookedSlots(data.bookings || []);
+        const availData = await availabilityRes.json();
+        setBookedSlots(availData.bookings || []);
       } else {
         const err = await res.json();
         toast.error(err.error || 'Failed to book court');
       }
     } catch {
       toast.error('Network error while booking court');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const processMockPayment = async (splitId: string) => {
+    setIsSubmitting(true);
+    try {
+      const res = await fetch('/api/payments/mock-webhook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ splitId })
+      });
+      if (res.ok) {
+        toast.success('Payment successful!');
+        setMockCheckoutSplitId(null);
+      } else {
+        toast.error('Payment failed');
+      }
+    } catch {
+      toast.error('Network error');
     } finally {
       setIsSubmitting(false);
     }
@@ -417,7 +474,11 @@ export default function CustomerPwaDashboard() {
               <input 
                 type="tel" 
                 value={loginPhone}
-                onChange={e => setLoginPhone(e.target.value)}
+                onChange={e => {
+                  const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                  setLoginPhone(val);
+                }}
+                maxLength={10}
                 placeholder="12345 67890"
                 className="w-full bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] dark:backdrop-blur-md text-slate-900 dark:text-white px-14 py-4 rounded-2xl font-bold tracking-wider outline-none focus:border-brand-court dark:focus:border-brand-court focus:ring-4 focus:ring-brand-court/10 dark:focus:ring-brand-court/20 transition-all shadow-sm dark:shadow-none"
                 autoFocus
@@ -482,7 +543,7 @@ export default function CustomerPwaDashboard() {
                   <h2 className="text-3xl font-light tracking-tight text-slate-900 dark:text-white">Reserve a <span className="font-semibold text-brand-court">Court</span></h2>
                 </div>
 
-                <form onSubmit={handleBookingSubmit} className="space-y-8">
+                <form onSubmit={openBookingModal} className="space-y-8">
                   
                   {/* Date Selection */}
                   <div className="space-y-3 -mx-6 px-6">
@@ -790,6 +851,91 @@ export default function CustomerPwaDashboard() {
           </>
         )}
       </div>
+
+      {/* Split Billing Modal */}
+      {isBookingModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center">
+          <div className="w-full max-w-md bg-white dark:bg-[#0f1523] rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl border border-slate-200 dark:border-white/10 animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-0 sm:fade-in duration-300">
+            <h3 className="text-xl font-extrabold text-slate-900 dark:text-white mb-2">Complete Booking</h3>
+            <p className="text-sm text-slate-500 dark:text-white/60 mb-6">Court Fee: ₹800/hr</p>
+            
+            <div className="flex bg-slate-100 dark:bg-white/5 p-1 rounded-xl mb-6">
+              <button 
+                type="button"
+                onClick={() => setSplitOption('full')} 
+                className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all ${splitOption === 'full' ? 'bg-white dark:bg-brand-court text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-white/40'}`}
+              >
+                Pay Full
+              </button>
+              <button 
+                type="button"
+                onClick={() => setSplitOption('split')} 
+                className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all ${splitOption === 'split' ? 'bg-white dark:bg-brand-court text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-white/40'}`}
+              >
+                Split with Friends
+              </button>
+            </div>
+
+            {splitOption === 'split' && (
+              <div className="space-y-4 mb-6">
+                <p className="text-xs font-semibold text-slate-500 dark:text-white/40 uppercase tracking-wider">Add Friends' Phone Numbers</p>
+                {splitPhones.map((phone, idx) => (
+                  <input
+                    key={idx}
+                    type="tel"
+                    maxLength={10}
+                    placeholder={`Friend ${idx + 1} Phone`}
+                    value={phone}
+                    onChange={e => {
+                      const newPhones = [...splitPhones];
+                      newPhones[idx] = e.target.value.replace(/\D/g, '').slice(0, 10);
+                      setSplitPhones(newPhones);
+                    }}
+                    className="w-full bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] text-slate-900 dark:text-white px-4 py-3 rounded-xl font-semibold outline-none focus:border-brand-court focus:ring-2 focus:ring-brand-court/20"
+                  />
+                ))}
+              </div>
+            )}
+
+            <div className="flex space-x-3">
+              <button 
+                onClick={() => setIsBookingModalOpen(false)} 
+                className="flex-1 py-4 rounded-xl font-bold text-sm bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-white/60 active:scale-95 transition-transform"
+              >
+                Cancel
+              </button>
+              <Button 
+                onClick={handleConfirmAndPay}
+                className="flex-1 py-4 rounded-xl font-bold text-sm bg-brand-court text-white active:scale-95 transition-transform border-0 shadow-[0_4px_15px_rgba(155,159,96,0.3)]"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Processing...' : 'Confirm & Book'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mock Payment Gateway Modal */}
+      {mockCheckoutSplitId && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md">
+          <div className="w-full max-w-sm bg-white dark:bg-[#0f1523] rounded-3xl p-8 text-center shadow-[0_0_50px_rgba(155,159,96,0.15)] border border-brand-court/20">
+            <div className="w-16 h-16 bg-brand-court/20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <span className="text-2xl font-bold text-brand-court">₹</span>
+            </div>
+            <h3 className="text-xl font-extrabold text-slate-900 dark:text-white mb-2">Mock Razorpay Checkout</h3>
+            <p className="text-sm text-slate-500 dark:text-white/60 mb-8">This simulates a successful payment gateway callback.</p>
+            
+            <Button 
+              onClick={() => processMockPayment(mockCheckoutSplitId)}
+              className="w-full py-4 rounded-xl font-bold text-sm bg-brand-court text-white active:scale-95 transition-transform border-0"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Paying...' : 'Simulate Payment Success'}
+            </Button>
+          </div>
+        </div>
+      )}
 
       {/* Floating Navigation Dock */}
       <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30">

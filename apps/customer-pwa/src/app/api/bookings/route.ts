@@ -45,7 +45,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { courtId, startTime, endTime } = body;
+    const { courtId, startTime, endTime, splitPhones } = body;
 
     if (!courtId || !startTime || !endTime) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -104,6 +104,25 @@ export async function POST(request: Request) {
         paymentStatus: 'PENDING'
       }
     });
+
+    const splitArray: string[] = splitPhones && Array.isArray(splitPhones) && splitPhones.length > 0
+      ? [user.phone, ...splitPhones.filter(p => p !== user.phone)]
+      : [user.phone];
+
+    const splitAmount = totalAmount / splitArray.length;
+
+    await Promise.all(splitArray.map(async (phone) => {
+      const splitUser = await prisma.user.findUnique({ where: { phone } });
+      return prisma.paymentSplit.create({
+        data: {
+          bookingId: newBooking.id,
+          userId: splitUser?.id || null,
+          phone,
+          amount: splitAmount,
+          status: 'PENDING'
+        }
+      });
+    }));
 
     return NextResponse.json({ booking: newBooking }, { status: 201 });
   } catch (error) {
