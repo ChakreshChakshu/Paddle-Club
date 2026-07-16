@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
-import { Cormorant_Garamond, Plus_Jakarta_Sans } from 'next/font/google';
+import React from 'react';
+import { Space_Grotesk, Plus_Jakarta_Sans } from 'next/font/google';
 import './globals.css';
 
 const sansFont = Plus_Jakarta_Sans({
@@ -8,10 +9,9 @@ const sansFont = Plus_Jakarta_Sans({
   display: 'swap',
 });
 
-const displayFont = Cormorant_Garamond({
+const displayFont = Space_Grotesk({
   subsets: ['latin'],
   weight: ['400', '500', '600', '700'],
-  style: ['normal', 'italic'],
   variable: '--font-display',
   display: 'swap',
 });
