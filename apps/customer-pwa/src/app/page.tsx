@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { isEnabled } from '@paddle-club/feature-flags';
 import { Button } from '@paddle-club/ui';
-import { Calendar, Coffee, User, Sparkles, ChevronRight, CheckCircle2, Clock, LogOut, Sun, Moon } from 'lucide-react';
+import { Calendar, Coffee, User, Users, Sparkles, ChevronRight, CheckCircle2, Clock, LogOut, Sun, Moon } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
 
 export default function CustomerPwaDashboard() {
@@ -44,6 +44,7 @@ export default function CustomerPwaDashboard() {
   // References to track previous state for notifications
   const prevBookingsRef = React.useRef<any[]>([]);
   const prevOrdersRef = React.useRef<any[]>([]);
+  const prevCommunityGamesRef = React.useRef<any[]>([]);
 
   const [activeTab, setActiveTab] = React.useState<'courts' | 'cafe' | 'profile'>('courts');
   const [selectedCourt, setSelectedCourt] = React.useState<string>('');
@@ -63,10 +64,12 @@ export default function CustomerPwaDashboard() {
   
   const [selectedSlot, setSelectedSlot] = React.useState<string>('');
   
-  // Split Billing States
+  // Split Billing & Open Play States
   const [isBookingModalOpen, setIsBookingModalOpen] = React.useState(false);
-  const [splitOption, setSplitOption] = React.useState<'full' | 'split'>('full');
+  const [splitOption, setSplitOption] = React.useState<'full' | 'split' | 'open'>('full');
   const [splitPhones, setSplitPhones] = React.useState<string[]>(['', '', '']);
+  const [openSlots, setOpenSlots] = React.useState(3);
+  const [requiredSkill, setRequiredSkill] = React.useState('Open to All');
   const [mockCheckoutSplitId, setMockCheckoutSplitId] = React.useState<string | null>(null);
 
   // States for fetched data
@@ -75,6 +78,7 @@ export default function CustomerPwaDashboard() {
   const [menuItems, setMenuItems] = React.useState<any[]>([]);
   const [myBookings, setMyBookings] = React.useState<any[]>([]);
   const [myOrders, setMyOrders] = React.useState<any[]>([]);
+  const [communityGames, setCommunityGames] = React.useState<any[]>([]);
 
   // UI States
   const [isLoading, setIsLoading] = React.useState(true);
@@ -223,10 +227,12 @@ export default function CustomerPwaDashboard() {
     const fetchProfileData = () => {
       Promise.all([
         fetch('/api/bookings/my').then(r => r.json()),
-        fetch('/api/orders/my').then(r => r.json())
-      ]).then(([bookingsData, ordersData]) => {
+        fetch('/api/orders/my').then(r => r.json()),
+        fetch('/api/community/games').then(r => r.json())
+      ]).then(([bookingsData, ordersData, communityData]) => {
         const newBookings = bookingsData.bookings || [];
         const newOrders = ordersData.orders || [];
+        const newCommunityGames = communityData.games || [];
 
         // Diff Bookings for Notifications
         if (prevBookingsRef.current.length > 0) {
@@ -258,11 +264,23 @@ export default function CustomerPwaDashboard() {
           });
         }
 
+        // Diff Community Games for Notifications
+        if (prevCommunityGamesRef.current.length > 0) {
+          newCommunityGames.forEach((newG: any) => {
+            const isNew = !prevCommunityGamesRef.current.find((g: any) => g.id === newG.id);
+            if (isNew && newG.userId !== currentUser.id) {
+              toast.success(`New Open Game! ${newG.openSlots} spots needed at ${newG.court?.name}.`, { duration: 6000 });
+            }
+          });
+        }
+
         prevBookingsRef.current = newBookings;
         prevOrdersRef.current = newOrders;
+        prevCommunityGamesRef.current = newCommunityGames;
 
         setMyBookings(newBookings);
         setMyOrders(newOrders);
+        setCommunityGames(newCommunityGames);
       }).catch(() => {});
     };
 
@@ -308,7 +326,15 @@ export default function CustomerPwaDashboard() {
       const res = await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ courtId: selectedCourt, startTime: start.toISOString(), endTime: end.toISOString(), splitPhones: validSplitPhones })
+        body: JSON.stringify({ 
+          courtId: selectedCourt, 
+          startTime: start.toISOString(), 
+          endTime: end.toISOString(), 
+          splitPhones: validSplitPhones,
+          isPublic: splitOption === 'open',
+          openSlots: splitOption === 'open' ? openSlots : 0,
+          requiredSkill: splitOption === 'open' ? requiredSkill : null
+        })
       });
 
       if (res.ok) {
@@ -848,6 +874,79 @@ export default function CustomerPwaDashboard() {
 
               </div>
             )}
+
+            {/* COMMUNITY TAB */}
+            {activeTab === 'community' && (
+              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="pt-2">
+                  <h2 className="text-3xl font-light tracking-tight text-slate-900 dark:text-white">Open <span className="font-semibold text-brand-court">Play</span></h2>
+                  <p className="text-sm text-slate-500 dark:text-white/50 mt-1">Join a public game and split the cost.</p>
+                </div>
+
+                <div className="space-y-4">
+                  {communityGames.length === 0 ? (
+                    <div className="border border-dashed border-slate-200 dark:border-white/10 rounded-2xl p-8 text-center bg-slate-50 dark:bg-white/[0.01]">
+                      <User className="w-8 h-8 text-slate-300 dark:text-white/20 mx-auto mb-3" />
+                      <p className="text-sm font-medium text-slate-500 dark:text-white/60">No open games available right now.</p>
+                    </div>
+                  ) : (
+                    communityGames.map(game => (
+                      <div key={game.id} className="p-5 bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] rounded-2xl dark:backdrop-blur-md shadow-sm dark:shadow-none space-y-4">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className="font-bold text-sm text-slate-900 dark:text-white/90 block">{game.court.name}</span>
+                            <span className="text-xs text-slate-500 dark:text-white/50 mt-0.5 block">
+                              {new Date(game.startTime).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} · {new Date(game.startTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                            </span>
+                          </div>
+                          <span className="bg-brand-court/10 text-brand-court font-bold text-[10px] px-2 py-1 rounded-md uppercase tracking-wider">
+                            {game.openSlots} Spots Left
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center space-x-2 text-xs">
+                          <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center font-bold text-slate-500 dark:text-white/50">{game.user.name.charAt(0)}</div>
+                          <span className="text-slate-600 dark:text-white/70 font-medium">Host: {game.user.name}</span>
+                          <span className="text-slate-300 dark:text-white/20 px-1">•</span>
+                          <span className="text-slate-500 dark:text-white/50 font-medium">Level: {game.requiredSkill || 'Open to All'}</span>
+                        </div>
+
+                        <div className="pt-2 border-t border-slate-100 dark:border-white/5 flex justify-between items-center">
+                          <span className="font-extrabold text-sm text-slate-900 dark:text-white/90">₹{game.totalAmount / 4} <span className="text-[10px] font-medium text-slate-500 dark:text-white/40">/person</span></span>
+                          <Button 
+                            onClick={async () => {
+                              try {
+                                setIsSubmitting(true);
+                                const res = await fetch('/api/community/join', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ bookingId: game.id })
+                                });
+                                if (res.ok) {
+                                  const data = await res.json();
+                                  setMockCheckoutSplitId(data.split.id);
+                                } else {
+                                  const err = await res.json();
+                                  toast.error(err.error || 'Failed to join game');
+                                }
+                              } catch {
+                                toast.error('Network error');
+                              } finally {
+                                setIsSubmitting(false);
+                              }
+                            }}
+                            className="bg-brand-court text-white px-4 py-2 rounded-lg text-xs font-bold active:scale-95 transition-transform"
+                            disabled={isSubmitting}
+                          >
+                            Join Game
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>
@@ -863,16 +962,23 @@ export default function CustomerPwaDashboard() {
               <button 
                 type="button"
                 onClick={() => setSplitOption('full')} 
-                className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all ${splitOption === 'full' ? 'bg-white dark:bg-brand-court text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-white/40'}`}
+                className={`flex-1 py-2.5 rounded-lg text-[11px] font-bold transition-all ${splitOption === 'full' ? 'bg-white dark:bg-brand-court text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-white/40'}`}
               >
                 Pay Full
               </button>
               <button 
                 type="button"
                 onClick={() => setSplitOption('split')} 
-                className={`flex-1 py-2.5 rounded-lg text-sm font-bold transition-all ${splitOption === 'split' ? 'bg-white dark:bg-brand-court text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-white/40'}`}
+                className={`flex-1 py-2.5 rounded-lg text-[11px] font-bold transition-all ${splitOption === 'split' ? 'bg-white dark:bg-brand-court text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-white/40'}`}
               >
-                Split with Friends
+                Split Friends
+              </button>
+              <button 
+                type="button"
+                onClick={() => setSplitOption('open')} 
+                className={`flex-1 py-2.5 rounded-lg text-[11px] font-bold transition-all ${splitOption === 'open' ? 'bg-white dark:bg-brand-court text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-white/40'}`}
+              >
+                Open Game
               </button>
             </div>
 
@@ -894,6 +1000,45 @@ export default function CustomerPwaDashboard() {
                     className="w-full bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] text-slate-900 dark:text-white px-4 py-3 rounded-xl font-semibold outline-none focus:border-brand-court focus:ring-2 focus:ring-brand-court/20"
                   />
                 ))}
+              </div>
+            )}
+
+            {splitOption === 'open' && (
+              <div className="space-y-4 mb-6">
+                <p className="text-xs font-semibold text-slate-500 dark:text-white/40 uppercase tracking-wider">Configure Open Game</p>
+                
+                <div>
+                  <label className="text-xs text-slate-500 dark:text-white/60 mb-2 block font-medium">Spots Needed</label>
+                  <div className="flex space-x-2">
+                    {[1, 2, 3].map(n => (
+                      <button 
+                        key={n}
+                        onClick={() => setOpenSlots(n)}
+                        className={`flex-1 py-2 rounded-lg text-sm font-bold border transition-colors ${openSlots === n ? 'bg-brand-court/10 border-brand-court text-brand-court' : 'bg-transparent border-slate-200 dark:border-white/10 text-slate-600 dark:text-white/60'}`}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs text-slate-500 dark:text-white/60 mb-2 block font-medium">Required Skill Level</label>
+                  <select 
+                    value={requiredSkill} 
+                    onChange={e => setRequiredSkill(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] text-slate-900 dark:text-white px-4 py-3 rounded-xl font-semibold outline-none focus:border-brand-court focus:ring-2 focus:ring-brand-court/20"
+                  >
+                    <option value="Open to All">Open to All</option>
+                    <option value="Beginner">Beginner</option>
+                    <option value="Intermediate">Intermediate</option>
+                    <option value="Advanced">Advanced</option>
+                  </select>
+                </div>
+                
+                <p className="text-[10px] text-brand-court bg-brand-court/10 p-2 rounded-lg font-medium">
+                  You will pay ₹200 now. Your game will be listed on the Community tab for others to join!
+                </p>
               </div>
             )}
 
@@ -954,6 +1099,14 @@ export default function CustomerPwaDashboard() {
           >
             <Coffee className="w-5 h-5 mb-1" />
             <span className="text-[9px] font-bold tracking-wide">Cafe</span>
+          </button>
+
+          <button 
+            onClick={() => setActiveTab('community')} 
+            className={`flex flex-col items-center justify-center w-12 transition-all active:scale-90 ${activeTab === 'community' ? 'text-emerald-500 dark:drop-shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'text-slate-400 dark:text-white/40 hover:text-slate-600 dark:hover:text-white/70'}`}
+          >
+            <Users className="w-5 h-5 mb-1" />
+            <span className="text-[9px] font-bold tracking-wide">Play</span>
           </button>
           
           <button 

@@ -45,7 +45,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { courtId, startTime, endTime, splitPhones } = body;
+    const { courtId, startTime, endTime, splitPhones, isPublic, openSlots, requiredSkill } = body;
 
     if (!courtId || !startTime || !endTime) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -101,7 +101,10 @@ export async function POST(request: Request) {
         endTime: end,
         totalAmount,
         status: 'PENDING',
-        paymentStatus: 'PENDING'
+        paymentStatus: 'PENDING',
+        isPublic: isPublic || false,
+        openSlots: isPublic ? (openSlots || 0) : 0,
+        requiredSkill: isPublic ? requiredSkill : null
       }
     });
 
@@ -109,7 +112,8 @@ export async function POST(request: Request) {
       ? [user.phone, ...splitPhones.filter(p => p !== user.phone)]
       : [user.phone];
 
-    const splitAmount = totalAmount / splitArray.length;
+    // For public games, we divide by 4. For private, we divide by the number of friends.
+    const splitAmount = isPublic ? (totalAmount / 4) : (totalAmount / splitArray.length);
 
     await Promise.all(splitArray.map(async (phone) => {
       const splitUser = await prisma.user.findUnique({ where: { phone } });

@@ -490,7 +490,10 @@ export default function AdminDashboardPage() {
                                   </div>
                                   <div>
                                     <span className="font-bold text-slate-900 dark:text-white/90 block">{bk.user.name ?? 'Unknown Player'}</span>
-                                    <span className="text-[10px] text-slate-500 dark:text-white/40 font-medium tracking-wide">{bk.user.phone}</span>
+                                    <div className="flex items-center space-x-2">
+                                      <span className="text-[10px] text-slate-500 dark:text-white/40 font-medium tracking-wide">{bk.user.phone}</span>
+                                      {bk.isPublic && <span className="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 text-[8px] font-bold px-1.5 py-0.5 rounded uppercase">Open</span>}
+                                    </div>
                                   </div>
                                 </div>
                               </td>
@@ -560,7 +563,10 @@ export default function AdminDashboardPage() {
                                </div>
                                <div>
                                  <span className="font-bold text-slate-900 dark:text-white/90 block text-sm">{bk.user.name ?? 'Unknown'}</span>
-                                 <span className="text-[9px] text-slate-500 dark:text-white/40 tracking-wide">{bk.user.phone}</span>
+                                 <div className="flex items-center space-x-2 mt-0.5">
+                                   <span className="text-[9px] text-slate-500 dark:text-white/40 tracking-wide">{bk.user.phone}</span>
+                                   {bk.isPublic && <span className="bg-emerald-50 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 text-[8px] font-bold px-1.5 py-0.5 rounded uppercase">Open</span>}
+                                 </div>
                                </div>
                             </div>
                             <div className="flex flex-col items-end space-y-1">
