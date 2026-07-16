@@ -15,7 +15,8 @@
     "lucide-react": "^0.378.0",
     "@paddle-club/ui": "*",
     "@paddle-club/feature-flags": "*",
-    "@paddle-club/db": "*"
+    "@paddle-club/db": "*",
+    "sonner": "^2.0.7"
   },
   "devDependencies": {
     "typescript": "^5.4.5",
