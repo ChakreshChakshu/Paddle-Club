@@ -3,13 +3,14 @@ import { prisma } from '@paddle-club/db';
 
 export async function PATCH(
   req: Request,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { available } = await req.json();
+    const { id } = await params;
 
     const updated = await prisma.menuItem.update({
-      where: { id: params.id },
+      where: { id },
       data: { available },
     });
 

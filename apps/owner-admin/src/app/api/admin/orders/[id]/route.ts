@@ -3,10 +3,11 @@ import { prisma } from '@paddle-club/db';
 
 export async function PATCH(
   request: NextRequest,
-  { params }: { params: { id: string } }
+  { params }: { params: Promise<{ id: string }> }
 ) {
   try {
     const { status } = await request.json();
+    const { id } = await params;
 
     if (!status || !['PENDING', 'PREPARING', 'COMPLETED', 'CANCELLED'].includes(status)) {
       return NextResponse.json(
@@ -16,7 +17,7 @@ export async function PATCH(
     }
 
     const existing = await prisma.order.findUnique({
-      where: { id: params.id },
+      where: { id },
     });
 
     if (!existing) {
@@ -27,7 +28,7 @@ export async function PATCH(
     }
 
     const updated = await prisma.order.update({
-      where: { id: params.id },
+      where: { id },
       data: { status },
       include: {
         user: true,
