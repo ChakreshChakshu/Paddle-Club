@@ -28,7 +28,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${sansFont.variable} ${displayFont.variable}`}>
-      <body className="font-sans antialiased min-h-screen bg-black text-slate-100">
+      <body className="font-sans antialiased min-h-screen text-slate-100">
         <div className="w-full min-h-screen overflow-x-clip relative">
           {children}
         </div>
