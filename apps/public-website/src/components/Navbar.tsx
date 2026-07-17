@@ -1,7 +1,6 @@
 'use client';
 
 import * as React from 'react';
-import { Button } from '@paddle-club/ui';
 import { Menu, X, ArrowRight, Activity, Coffee, ShieldCheck, Building2 } from 'lucide-react';
 
 /* ─── Liquid Glass CSS injected once ─── */
