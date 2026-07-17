@@ -1,0 +1,7 @@
+{
+  "framework": "next-app",
+  "files": ["src/app/**/*.tsx"],
+  "insertBefore": "</head>",
+  "commentSyntax": "{/* %%%OPENCODE%%% */}",
+  "cspChecked": false
+}

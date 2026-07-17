@@ -1,0 +1,37 @@
+{
+  "name": "@paddle-club/public-website",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "next dev -p 3000",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
+  },
+  "dependencies": {
+    "class-variance-authority": "^0.7.0",
+    "clsx": "^2.1.1",
+    "@radix-ui/react-slot": "^1.0.2",
+    "tailwind-merge": "^2.3.0",
+    "@paddle-club/feature-flags": "*",
+    "@paddle-club/ui": "*",
+    "framer-motion": "^11.2.6",
+    "gsap": "^3.12.5",
+    "lucide-react": "^0.378.0",
+    "next": "^16.2.10",
+    "ogl": "^1.0.11",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
+  },
+  "devDependencies": {
+    "@paddle-club/tailwind-config": "*",
+    "@paddle-club/typescript-config": "*",
+    "@types/node": "^20.12.12",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
+    "autoprefixer": "^10.4.19",
+    "postcss": "^8.4.38",
+    "tailwindcss": "^3.4.3",
+    "typescript": "^5.4.5"
+  }
+}
