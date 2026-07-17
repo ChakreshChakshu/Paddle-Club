@@ -206,6 +206,17 @@ export default function SpecularButton({
 
     const lineC = new Color();
     const baseC = new Color();
+    const tmpEl = document.createElement('span');
+    tmpEl.style.cssText = 'position:absolute;pointer-events:none;visibility:hidden';
+    document.body.appendChild(tmpEl);
+    const resolveColor = (target: Color, value: string) => {
+      if (value[0] === '#') { target.set(value); return; }
+      tmpEl.style.color = value;
+      const computed = getComputedStyle(tmpEl).color;
+      const m = computed.match(/[\d.]+/g);
+      if (m) target.set([+m[0] / 255, +m[1] / 255, +m[2] / 255]);
+      else target.set(value);
+    };
 
     const update = (now: number) => {
       raf = requestAnimationFrame(update);
@@ -222,8 +233,8 @@ export default function SpecularButton({
       const brightTarget = p.autoAnimate ? 1 : proximityT;
       bright += (brightTarget - bright) * (1 - Math.exp(-dt * 8));
 
-      lineC.set(p.lineColor);
-      baseC.set(p.baseColor);
+      resolveColor(lineC, p.lineColor);
+      resolveColor(baseC, p.baseColor);
       program.uniforms.uAngle.value = angle;
       program.uniforms.uRadius.value = Math.min(p.radius, Math.min(sizeRef.w, sizeRef.h) / 2) * dpr;
       program.uniforms.uLineColor.value = [lineC.r, lineC.g, lineC.b];
@@ -242,6 +253,7 @@ export default function SpecularButton({
       window.removeEventListener('pointermove', onPointerMove);
       if (gl.canvas.parentNode === fx) fx.removeChild(gl.canvas);
       gl.getExtension('WEBGL_lose_context')?.loseContext();
+      tmpEl.remove();
     };
   }, []);
 
