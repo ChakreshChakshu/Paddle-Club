@@ -1,8 +1,7 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { PrismaClient } from '@paddle-club/db';
+import { prisma } from '@paddle-club/db';
 
-const prisma = new PrismaClient();
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);

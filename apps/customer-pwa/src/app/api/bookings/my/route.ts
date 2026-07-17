@@ -1,10 +1,9 @@
 import { NextResponse } from 'next/server';
 import { cookies } from 'next/headers';
-import { PrismaClient } from '@paddle-club/db';
+import { prisma } from '@paddle-club/db';
 
 export const dynamic = 'force-dynamic';
 
-const prisma = new PrismaClient();
 
 export async function GET() {
   try {
