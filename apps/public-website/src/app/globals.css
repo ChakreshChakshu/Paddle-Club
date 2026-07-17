@@ -4,7 +4,7 @@
 
 @layer base {
   :root {
-    /* Typography Scale */
+    /* ── Typography Scale ── */
     --fs-micro: 0.625rem;
     --fs-label: 0.75rem;
     --fs-caption: 0.875rem;
@@ -19,41 +19,48 @@
     --ls-caps: 0.1em;
     --ls-eyebrow: 0.25em;
 
-    /* Brand — Court (Palm Leaf) */
-    --color-court: 155 159 96;
-    --color-court-light: 195 198 159;
-    --color-court-dark: 93 96 57;
-    --color-court-lime: 255 255 51;
+    /* ────────────────────────────────────────
+       PALETTE
+       #010D00  near-black forest   → deepest bg
+       #05260A  dark forest green   → card / surface bg
+       #16261C  mid forest green    → border / subtle surface
+       #7D8C82  sage grey-green     → muted text / secondary accent
+       #F2EBDC  warm cream          → primary text & CTA labels
+    ──────────────────────────────────────── */
 
-    /* Brand — Cafe (Silver) */
-    --color-cafe: 140 126 115;
-    --color-cafe-light: 186 178 171;
-    --color-cafe-dark: 84 76 69;
-    --color-cafe-bg: 246 246 238;
+    /* Brand — Court (primary accent = cream on dark) */
+    --color-court:       242 235 220;   /* #F2EBDC cream  → primary CTA bg */
+    --color-court-light: 255 250 240;   /* lighter cream hover */
+    --color-court-dark:  22 38 28;      /* #16261C mid-forest */
+    --color-court-lime:  125 140 130;   /* #7D8C82 sage muted */
 
-    /* Brand — Dark (Olive Black) */
-    --color-dark: 24 24 12;
-    --color-dark-card: 34 34 17;
-    --color-dark-border: 68 68 34;
+    /* Brand — Cafe / sage accent */
+    --color-cafe:        125 140 130;   /* #7D8C82 sage */
+    --color-cafe-light:  180 195 187;   /* sage lighter */
+    --color-cafe-dark:   22 38 28;      /* #16261C */
+    --color-cafe-bg:     242 235 220;   /* #F2EBDC cream — text & light bg */
 
-    /* Accent — Courts */
-    --color-lime: 132 204 22;
-    --color-lime-light: 163 230 53;
-    --color-sky: 14 165 233;
-    --color-sky-light: 56 189 248;
-    --color-rose: 244 63 94;
-    --color-rose-light: 251 113 133;
+    /* Brand — Dark surfaces */
+    --color-dark:        1 13 0;        /* #010D00 — page bg */
+    --color-dark-card:   5 38 10;       /* #05260A — card bg */
+    --color-dark-border: 22 38 28;      /* #16261C — border */
 
-    /* Accent — Cafe / Corporate */
-    --color-amber: 245 158 11;
-    --color-amber-light: 251 191 36;
-    --color-blue: 59 130 246;
-    --color-blue-light: 96 165 250;
+    /* Accents */
+    --color-lime:        125 140 130;
+    --color-lime-light:  180 195 187;
+    --color-sky:         125 140 130;
+    --color-sky-light:   180 195 187;
+    --color-rose:        200 100 80;
+    --color-rose-light:  220 140 120;
+    --color-amber:       180 150 90;
+    --color-amber-light: 210 185 130;
+    --color-blue:        80 110 100;
+    --color-blue-light:  110 145 135;
 
     /* Neutrals */
-    --color-neutral-800: 38 38 38;
-    --color-neutral-900: 23 23 23;
-    --color-neutral-950: 10 10 10;
+    --color-neutral-800: 22 38 28;
+    --color-neutral-900: 5 38 10;
+    --color-neutral-950: 1 13 0;
   }
 
   html {
@@ -65,7 +72,32 @@
   }
 
   body {
-    background-color: rgb(var(--color-dark) / 1);
-    color: rgb(var(--color-cafe-bg) / 1);
+    background-color: #010D00;   /* near-black forest */
+    color: #F2EBDC;              /* warm cream — all body text */
   }
+
+  /* ── Global text hierarchy using the new palette ── */
+  h1, h2, h3, h4, h5, h6 {
+    color: #F2EBDC;             /* cream headings */
+  }
+
+  /* Muted / secondary text maps to sage */
+  .text-muted {
+    color: #7D8C82;
+  }
+
+  /* Convenience: override Tailwind's slate-* with palette equivalents */
+  .text-slate-100  { color: #F2EBDC !important; }
+  .text-slate-200  { color: #e8e3d8 !important; }
+  .text-slate-300  { color: #d4cec4 !important; }
+  .text-slate-400  { color: #7D8C82 !important; }
+  .text-slate-500  { color: #5e6e65 !important; }
+  .text-slate-600  { color: #3d4d44 !important; }
+
+  /* Surface overrides */
+  .bg-black        { background-color: #010D00 !important; }
+  .bg-neutral-900  { background-color: #05260A !important; }
+  .bg-neutral-800  { background-color: #16261C !important; }
+  .border-neutral-900 { border-color: #05260A !important; }
+  .border-neutral-800 { border-color: #16261C !important; }
 }

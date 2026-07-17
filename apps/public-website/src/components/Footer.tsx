@@ -14,7 +14,7 @@ import {
 
 export function Footer() {
   return (
-    <footer className="w-full mt-auto border-t border-neutral-900 bg-black pt-10 pb-16 md:pb-20 px-4 md:px-8 lg:px-16 z-10 relative overflow-hidden">
+    <footer className="w-full mt-auto border-t border-[#16261C] bg-[#010D00] pt-10 pb-16 md:pb-20 px-4 md:px-8 lg:px-16 z-10 relative overflow-hidden">
       {/* Centered Content Wrapper */}
       <div className="max-w-7xl mx-auto w-full flex flex-col space-y-8 relative z-10">
         
@@ -24,25 +24,25 @@ export function Footer() {
           {/* Brand Col (5 columns) */}
           <div className="lg:col-span-5 flex flex-col space-y-3.5">
             <a href="/" className="flex items-center space-x-2.5 group w-fit">
-              <div className="relative flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-brand-court to-brand-court-dark shadow-md shadow-palm-leaf-500/20">
-                <span className="text-base font-bold font-display text-white italic">P</span>
+              <div className="relative flex items-center justify-center w-8 h-8 rounded-lg bg-gradient-to-br from-[#16261C] to-[#05260A] shadow-md">
+                <span className="text-base font-bold font-display text-[#F2EBDC] italic">P</span>
               </div>
-              <span className="text-lg font-extrabold tracking-tight font-display text-white">
-                THE PADDLE <span className="text-brand-court">CLUB</span>
+              <span className="text-lg font-extrabold tracking-tight font-display text-[#F2EBDC]">
+                THE PADDLE <span className="text-[#7D8C82]">CLUB</span>
               </span>
             </a>
-            <p className="text-slate-400 text-sm md:text-base leading-relaxed max-w-md">
+            <p className="text-[#7D8C82] text-sm md:text-base leading-relaxed max-w-md">
               Agra's premier sports club featuring professional-grade pickleball courts, high-end indoor badminton facilities, and artisan dining at Cafe Brio. Play, dine, and socialize in a luxury environment.
             </p>
           </div>
 
           {/* About Us (2 columns) */}
           <div className="lg:col-span-2 flex flex-col space-y-3.5">
-            <h4 className="text-white font-bold text-xs uppercase tracking-wide">About Us</h4>
+            <h4 className="text-[#F2EBDC] font-bold text-xs uppercase tracking-wide">About Us</h4>
             <ul className="space-y-2 text-xs md:text-sm">
               {["Our Story", "Meet the Coaches", "Careers", "Membership"].map((item) => (
                 <li key={item}>
-                  <a href="/#about" className="text-slate-400 hover:text-white hover:underline transition-all">
+                  <a href="/#about" className="text-[#7D8C82] hover:text-[#F2EBDC] hover:underline transition-all">
                     {item}
                   </a>
                 </li>
@@ -52,7 +52,7 @@ export function Footer() {
 
           {/* Helpful Links (2 columns) */}
           <div className="lg:col-span-2 flex flex-col space-y-3.5">
-            <h4 className="text-white font-bold text-xs uppercase tracking-wide">Helpful Links</h4>
+            <h4 className="text-[#F2EBDC] font-bold text-xs uppercase tracking-wide">Helpful Links</h4>
             <ul className="space-y-2 text-xs md:text-sm">
               {["FAQs", "Court Policies", "Cafe Menu", "Corporate Events"].map((item) => {
                 let link = "/#about"
@@ -61,7 +61,7 @@ export function Footer() {
                 if (item === "Corporate Events") link = "/corporate"
                 return (
                   <li key={item}>
-                    <a href={link} className="text-slate-400 hover:text-white hover:underline transition-all">
+                    <a href={link} className="text-[#7D8C82] hover:text-[#F2EBDC] hover:underline transition-all">
                       {item}
                     </a>
                   </li>
@@ -72,17 +72,17 @@ export function Footer() {
 
           {/* Contact Us (3 columns) */}
           <div className="lg:col-span-3 flex flex-col space-y-3.5">
-            <h4 className="text-white font-bold text-xs uppercase tracking-wide">Contact Us</h4>
-            <ul className="space-y-2.5 text-xs md:text-sm text-slate-400">
+            <h4 className="text-[#F2EBDC] font-bold text-xs uppercase tracking-wide">Contact Us</h4>
+            <ul className="space-y-2.5 text-xs md:text-sm text-[#7D8C82]">
               <li className="flex items-center space-x-3">
                 <Mail className="w-4 h-4 text-brand-court flex-shrink-0" />
-                <a href="mailto:hello@paddleclub.in" className="hover:text-white hover:underline transition-all">
+                <a href="mailto:hello@paddleclub.in" className="hover:text-[#F2EBDC] hover:underline transition-all">
                   hello@paddleclub.in
                 </a>
               </li>
               <li className="flex items-center space-x-3">
                 <Phone className="w-4 h-4 text-brand-court flex-shrink-0" />
-                <a href="tel:+919105551007" className="hover:text-white transition-all">
+                <a href="tel:+919105551007" className="hover:text-[#F2EBDC] transition-all">
                   +91 91055 51007
                 </a>
               </li>
@@ -96,7 +96,7 @@ export function Footer() {
         </div>
 
         {/* Divider */}
-        <div className="w-full h-px bg-neutral-900" />
+        <div className="w-full h-px bg-[#16261C]" />
 
         {/* Bottom Section: socials & copyright */}
         <div className="flex flex-col md:flex-row items-center justify-between gap-4 pt-1">
@@ -117,7 +117,7 @@ export function Footer() {
                   href={soc.href} 
                   target="_blank" 
                   rel="noreferrer"
-                  className="w-7 h-7 rounded-full border border-neutral-800 bg-neutral-900/60 flex items-center justify-center text-slate-400 hover:text-white hover:border-brand-court/40 transition-all hover:scale-105"
+                  className="w-7 h-7 rounded-full border border-[#16261C] bg-[#05260A] flex items-center justify-center text-[#7D8C82] hover:text-[#F2EBDC] hover:border-[#7D8C82] transition-all hover:scale-105"
                 >
                   <IconComp className="w-3.5 h-3.5" />
                 </a>
@@ -126,7 +126,7 @@ export function Footer() {
           </div>
 
           {/* Copyright */}
-          <span className="text-xs text-slate-500 font-medium">
+          <span className="text-xs text-[#5e6e65] font-medium">
             © {new Date().getFullYear()} The Paddle Club. All rights reserved.
           </span>
 

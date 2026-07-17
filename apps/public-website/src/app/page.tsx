@@ -10,6 +10,7 @@ import { TypewriterTitle } from '../components/TypewriterTitle';
 import { VideoBackground } from '../components/VideoBackground';
 import { BrandingLoader } from '../components/BrandingLoader';
 import ExpandableGallery from '../components/ui/gallery-animation';
+import { MobileHeroSlider } from '../components/MobileHeroSlider';
 import { motion } from 'framer-motion';
 
 import SpecularButton from '../components/SpecularButton';
@@ -38,55 +39,60 @@ export default function HomePage() {
         <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] bg-brand-court/10 rounded-full blur-[120px] pointer-events-none" />
         <div className="absolute bottom-0 right-[-10%] w-[50%] h-[50%] bg-brand-cafe/10 rounded-full blur-[120px] pointer-events-none" />
 
-        {/* Hero Header Area */}
-        <div className="relative w-full h-screen flex flex-col justify-between overflow-hidden">
+        {/* Navbar — fixed z-[100], renders for both mobile & desktop */}
+        <Navbar />
+
+        {/* ── MOBILE HERO: Image Slider (visible below md) ── */}
+        <div className="block md:hidden w-full">
+          <MobileHeroSlider />
+        </div>
+
+        {/* ── DESKTOP HERO: Video Background + Content (md and above) ── */}
+        <div className="hidden md:flex relative w-full h-screen flex-col justify-between overflow-hidden">
           {/* Full-bleed Video Background */}
           <VideoBackground />
 
-          {/* Header */}
-          <Navbar />
+          {/* Hero Content */}
+          <section className="relative w-full max-w-7xl mx-auto px-6 h-full flex items-center justify-start z-10 flex-grow pt-24 pb-20">
+            <motion.div 
+              initial={{ opacity: 0, x: -30 }}
+              animate={{ opacity: 1, x: 0 }}
+              transition={{ duration: 0.8, ease: 'easeOut' }}
+              className="relative z-10 max-w-lg flex flex-col space-y-6 text-left"
+            >
+              <TypewriterTitle />
+              
+              <p className="text-sm md:text-base text-slate-300 leading-relaxed">
+                Experience elite pickleball play on professional, illuminated courts followed by artisan food at Cafe Brio. A true gem in DayalBagh, Agra.
+              </p>
 
-        {/* Hero Content */}
-        <section className="relative w-full max-w-7xl mx-auto px-6 h-full flex items-center justify-start z-10 flex-grow pt-24 pb-20">
-          <motion.div 
-            initial={{ opacity: 0, x: -30 }}
-            animate={{ opacity: 1, x: 0 }}
-            transition={{ duration: 0.8, ease: 'easeOut' }}
-            className="relative z-10 max-w-lg flex flex-col space-y-6 text-left"
-          >
-            <TypewriterTitle />
-            
-            <p className="text-sm md:text-base text-slate-300 leading-relaxed">
-              Experience elite pickleball play on professional, illuminated courts followed by artisan food at Cafe Brio. A true gem in DayalBagh, Agra.
-            </p>
-
-            <div className="pt-2 w-full">
-              <a href="/courts" className="inline-block w-full sm:w-auto">
-                <SpecularButton
-                  size="lg"
-                  radius={24}
-                  tint="var(--color-cafe-bg)"
-                  tintOpacity={0.05}
-                  blur={4}
-                  textColor="var(--color-cafe-bg)"
-                  lineColor="var(--color-lime-light)"
-                  baseColor="var(--color-neutral-800)"
-                  intensity={1.2}
-                  shineSize={12}
-                  shineFade={45}
-                  thickness={1.5}
-                  speed={0.3}
-                  followMouse
-                  proximity={250}
-                  className="w-full sm:w-auto font-display font-bold uppercase tracking-wide shadow-lg"
-                >
-                  Book Court Session
-                </SpecularButton>
-              </a>
-            </div>
-          </motion.div>
-        </section>
-      </div>
+              <div className="pt-2 w-full">
+                <a href="/courts" className="inline-block w-full sm:w-auto">
+                  <SpecularButton
+                    size="lg"
+                    radius={24}
+                    tint="var(--color-cafe-bg)"
+                    tintOpacity={0.05}
+                    blur={4}
+                    textColor="var(--color-cafe-bg)"
+                    lineColor="var(--color-lime-light)"
+                    baseColor="var(--color-neutral-800)"
+                    intensity={1.2}
+                    shineSize={12}
+                    shineFade={45}
+                    thickness={1.5}
+                    speed={0.3}
+                    followMouse
+                    proximity={250}
+                    className="w-full sm:w-auto font-display font-bold uppercase tracking-wide shadow-lg"
+                  >
+                    Book Court Session
+                  </SpecularButton>
+                </a>
+              </div>
+            </motion.div>
+          </section>
+        </div>
 
       {/* Dedicated Sections */}
       <div className="w-full max-w-7xl px-6 py-20 flex flex-col space-y-32 z-10">
