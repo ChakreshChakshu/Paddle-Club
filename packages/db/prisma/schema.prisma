@@ -22,7 +22,7 @@ model User {
 model Court {
   id          String    @id @default(uuid())
   name        String
-  sportType   String    @default("PICKLEBALL") // "PICKLEBALL" | "PADEL"
+  sportType   String    @default("PICKLEBALL") // "PICKLEBALL" | "SKYBALL" | "BADMINTON"
   surface     String    @default("Aesthetic Acrylic")
   hourlyRate  Float
   lighting    Boolean   @default(true)

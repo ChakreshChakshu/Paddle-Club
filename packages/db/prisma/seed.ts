@@ -36,7 +36,9 @@ async function main() {
   await prisma.court.deleteMany();
 
   const courts = [
-    { name: 'The Paddle Court', sportType: 'PICKLEBALL', surface: 'Aesthetic Acrylic', hourlyRate: 400, lighting: true },
+    { name: 'The Pickleball Court', sportType: 'PICKLEBALL', surface: 'Aesthetic Acrylic', hourlyRate: 400, lighting: true },
+    { name: 'The Skyball Arena', sportType: 'SKYBALL', surface: 'Synthetic Turf', hourlyRate: 400, lighting: true },
+    { name: 'The Badminton Court', sportType: 'BADMINTON', surface: 'Wooden Parquet', hourlyRate: 300, lighting: true },
   ];
 
   for (const courtData of courts) {

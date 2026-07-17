@@ -18,7 +18,7 @@ const displayFont = Cormorant_Garamond({
 
 export const metadata: Metadata = {
   title: 'The Paddle Club App',
-  description: 'Book pickleball courts and Cafe Brio menu items.',
+  description: 'Book Pickleball, Skyball, and Badminton courts and Cafe Brio menu items.',
   manifest: '/manifest.json',
 };
 

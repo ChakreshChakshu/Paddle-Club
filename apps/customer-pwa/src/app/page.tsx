@@ -48,6 +48,7 @@ export default function CustomerPwaDashboard() {
 
   const [activeTab, setActiveTab] = React.useState<'courts' | 'cafe' | 'profile'>('courts');
   const [selectedCourt, setSelectedCourt] = React.useState<string>('');
+  const [selectedSportType, setSelectedSportType] = React.useState<string>('All');
   
   // Date Carousel Logic
   const getNext7Days = () => {
@@ -598,11 +599,31 @@ export default function CustomerPwaDashboard() {
                     </div>
                   </div>
 
+                  {/* Sport Filter */}
+                  {courtsList.length > 0 && (
+                    <div className="flex space-x-2 -mx-6 px-6 overflow-x-auto scrollbar-hide pb-2">
+                      {['All', 'PICKLEBALL', 'SKYBALL', 'BADMINTON'].map(sport => (
+                        <button
+                          key={sport}
+                          type="button"
+                          onClick={() => { setSelectedSportType(sport); setSelectedCourt(''); setSelectedSlot(''); }}
+                          className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap active:scale-95 ${
+                            selectedSportType === sport 
+                              ? 'bg-brand-court text-white shadow-md' 
+                              : 'bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 text-slate-500 dark:text-white/50'
+                          }`}
+                        >
+                          {sport === 'All' ? 'All Sports' : sport.charAt(0) + sport.slice(1).toLowerCase()}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
                   {/* Multiple Courts UI (if applicable) */}
-                  {courtsList.length > 1 && (
+                  {courtsList.filter(c => selectedSportType === 'All' || c.sportType === selectedSportType).length > 1 && (
                     <div className="space-y-3">
                       <div className="grid grid-cols-1 gap-3">
-                        {courtsList.map((court) => (
+                        {courtsList.filter(c => selectedSportType === 'All' || c.sportType === selectedSportType).map((court) => (
                           <div
                             key={court.id}
                             onClick={() => { setSelectedCourt(court.id); setSelectedSlot(''); }}
@@ -624,13 +645,13 @@ export default function CustomerPwaDashboard() {
                   )}
 
                   {/* Single Court Header (Premium look) */}
-                  {courtsList.length === 1 && (
+                  {courtsList.filter(c => selectedSportType === 'All' || c.sportType === selectedSportType).length === 1 && (
                     <div className="flex items-end justify-between border-b border-slate-200 dark:border-white/10 pb-4">
                       <div>
                         <span className="text-[10px] font-bold text-slate-400 dark:text-white/40 uppercase tracking-widest block mb-1">Selected Court</span>
-                        <span className="font-semibold text-lg text-slate-900 dark:text-white/90">{courtsList[0].name}</span>
+                        <span className="font-semibold text-lg text-slate-900 dark:text-white/90">{courtsList.filter(c => selectedSportType === 'All' || c.sportType === selectedSportType)[0].name}</span>
                       </div>
-                      <span className="text-sm font-bold text-brand-court bg-brand-court/10 px-3 py-1 rounded-full">₹{courtsList[0].hourlyRate}/hr</span>
+                      <span className="text-sm font-bold text-brand-court bg-brand-court/10 px-3 py-1 rounded-full">₹{courtsList.filter(c => selectedSportType === 'All' || c.sportType === selectedSportType)[0].hourlyRate}/hr</span>
                     </div>
                   )}
 

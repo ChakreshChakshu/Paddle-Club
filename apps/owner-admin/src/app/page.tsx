@@ -825,6 +825,7 @@ export default function AdminDashboardPage() {
                           <tr>
                             <th className="px-6 py-4 text-[10px] font-bold text-slate-500 dark:text-white/40 uppercase tracking-widest">Player</th>
                             <th className="px-6 py-4 text-[10px] font-bold text-slate-500 dark:text-white/40 uppercase tracking-widest">Time Slot</th>
+                            <th className="px-6 py-4 text-[10px] font-bold text-slate-500 dark:text-white/40 uppercase tracking-widest">Court / Sport</th>
                             <th className="px-6 py-4 text-[10px] font-bold text-slate-500 dark:text-white/40 uppercase tracking-widest">Payment</th>
                             <th className="px-6 py-4 text-[10px] font-bold text-slate-500 dark:text-white/40 uppercase tracking-widest">Status</th>
                             <th className="px-6 py-4 text-[10px] font-bold text-slate-500 dark:text-white/40 uppercase tracking-widest text-right">Actions</th>
@@ -850,6 +851,10 @@ export default function AdminDashboardPage() {
                               <td className="px-6 py-4">
                                 <span className="font-semibold text-slate-800 dark:text-white/90 block text-sm">{formatDate(bk.startTime)}</span>
                                 <span className="text-[11px] text-slate-500 dark:text-white/50">{formatTime(bk.startTime, bk.endTime)}</span>
+                              </td>
+                              <td className="px-6 py-4">
+                                <span className="font-semibold text-slate-800 dark:text-white/90 block text-sm">{bk.court.name}</span>
+                                <span className="text-[11px] text-slate-500 dark:text-white/50 uppercase">{bk.court.sportType}</span>
                               </td>
                               <td className="px-6 py-4">
                                 <span className={`inline-flex items-center px-2 py-0.5 rounded text-[9px] font-bold tracking-wider ${
@@ -931,9 +936,15 @@ export default function AdminDashboardPage() {
                             </div>
                           </div>
                           
-                          <div className="bg-slate-50 dark:bg-white/[0.01] rounded-xl p-3 mb-3 border border-slate-100 dark:border-white/[0.02]">
-                            <span className="text-slate-800 dark:text-white/80 font-bold text-xs block">{formatDate(bk.startTime)}</span>
-                            <span className="text-slate-500 dark:text-white/40 text-[10px] font-medium">{formatTime(bk.startTime, bk.endTime)}</span>
+                          <div className="bg-slate-50 dark:bg-white/[0.01] rounded-xl p-3 mb-3 border border-slate-100 dark:border-white/[0.02] flex justify-between items-center">
+                            <div>
+                              <span className="text-slate-800 dark:text-white/80 font-bold text-xs block">{formatDate(bk.startTime)}</span>
+                              <span className="text-slate-500 dark:text-white/40 text-[10px] font-medium">{formatTime(bk.startTime, bk.endTime)}</span>
+                            </div>
+                            <div className="text-right">
+                              <span className="text-slate-800 dark:text-white/80 font-bold text-xs block">{bk.court.name}</span>
+                              <span className="text-slate-500 dark:text-white/40 text-[10px] font-medium uppercase">{bk.court.sportType}</span>
+                            </div>
                           </div>
 
                           <div className="flex justify-end space-x-2">
