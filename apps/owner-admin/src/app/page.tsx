@@ -20,7 +20,8 @@ import {
   Smartphone,
   Mail,
   Sun,
-  Moon
+  Moon,
+  LogOut
 } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
 
@@ -80,6 +81,34 @@ interface Member {
   createdAt: string;
 }
 
+const LiveTimer = ({ createdAt }: { createdAt: string }) => {
+  const [elapsed, setElapsed] = React.useState(0);
+  
+  React.useEffect(() => {
+    const start = new Date(createdAt).getTime();
+    const tick = () => setElapsed(Math.floor((Date.now() - start) / 1000));
+    tick(); // initial tick
+    const interval = setInterval(tick, 1000);
+    return () => clearInterval(interval);
+  }, [createdAt]);
+
+  const mins = Math.floor(elapsed / 60);
+  const secs = elapsed % 60;
+  
+  const isWarning = mins >= 10 && mins < 15;
+  const isOverdue = mins >= 15;
+
+  return (
+    <span className={`font-mono text-[10px] md:text-xs font-bold px-2 py-0.5 rounded-full ${
+      isOverdue ? 'bg-red-100 text-red-600 dark:bg-red-500/20 dark:text-red-400 animate-pulse shadow-sm dark:shadow-[0_0_10px_rgba(239,68,68,0.3)]' :
+      isWarning ? 'bg-amber-100 text-amber-600 dark:bg-amber-500/20 dark:text-amber-400' :
+      'bg-slate-100 text-slate-500 dark:bg-white/10 dark:text-white/40'
+    }`}>
+      {mins}:{secs.toString().padStart(2, '0')}
+    </span>
+  );
+};
+
 export default function AdminDashboardPage() {
   const flags = getAllFlags();
 
@@ -128,6 +157,103 @@ export default function AdminDashboardPage() {
   const [error, setError] = React.useState<string | null>(null);
 
   const [activeNav, setActiveNav] = React.useState<'dashboard' | 'members' | 'settings'>('dashboard');
+
+  // --- AUTH STATE ---
+  const [currentUser, setCurrentUser] = React.useState<Member | null>(null);
+  const [loginPhone, setLoginPhone] = React.useState('');
+  const [isLoggingIn, setIsLoggingIn] = React.useState(false);
+  const [isAuthLoading, setIsAuthLoading] = React.useState(true);
+
+  // --- KDS ENHANCEMENTS STATE ---
+  const prevOrdersCountRef = React.useRef(0);
+  const audioRef = React.useRef<HTMLAudioElement | null>(null);
+  const [menuItems, setMenuItems] = React.useState<any[]>([]);
+  const [showInventory, setShowInventory] = React.useState(false);
+  const [loadingInventory, setLoadingInventory] = React.useState(false);
+
+  React.useEffect(() => {
+    const savedUser = localStorage.getItem('admin-user');
+    if (savedUser) {
+      setCurrentUser(JSON.parse(savedUser));
+    }
+    setIsAuthLoading(false);
+  }, []);
+
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (loginPhone.length !== 10) return toast.error('Enter a valid 10-digit phone number');
+    
+    setIsLoggingIn(true);
+    try {
+      const res = await fetch('/api/admin/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: loginPhone })
+      });
+      
+      if (res.ok) {
+        const data = await res.json();
+        setCurrentUser(data.user);
+        localStorage.setItem('admin-user', JSON.stringify(data.user));
+        toast.success(`Welcome back, ${data.user.name}`);
+      } else {
+        const err = await res.json();
+        toast.error(err.error || 'Login failed');
+      }
+    } catch {
+      toast.error('Network error during login');
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleLogout = () => {
+    setCurrentUser(null);
+    localStorage.removeItem('admin-user');
+  };
+  // ------------------
+
+  // --- KDS EFFECTS & INVENTORY API ---
+  React.useEffect(() => {
+    if (typeof window !== 'undefined' && !audioRef.current) {
+      audioRef.current = new Audio('data:audio/wav;base64,UklGRl9vT19XQVZFZm10IBAAAAABAAEAQB8AAEAfAAABAAgAZGF0YU'); // Mock Base64 Ding
+    }
+    
+    const pendingCount = orders.filter(o => o.status === 'PENDING').length;
+    if (pendingCount > prevOrdersCountRef.current && audioRef.current) {
+      audioRef.current.play().catch(() => console.log('Audio autoplay blocked'));
+    }
+    prevOrdersCountRef.current = pendingCount;
+  }, [orders]);
+
+  const fetchInventory = async () => {
+    setLoadingInventory(true);
+    try {
+      const res = await fetch('/api/admin/menu');
+      if (res.ok) setMenuItems(await res.json());
+    } catch {
+      toast.error('Failed to load inventory');
+    } finally {
+      setLoadingInventory(false);
+    }
+  };
+
+  const toggleMenuItem = async (id: string, currentAvailable: boolean) => {
+    try {
+      const res = await fetch(`/api/admin/menu/${id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ available: !currentAvailable })
+      });
+      if (res.ok) {
+        setMenuItems(prev => prev.map(m => m.id === id ? { ...m, available: !currentAvailable } : m));
+        toast.success('Inventory updated');
+      }
+    } catch {
+      toast.error('Failed to update inventory');
+    }
+  };
+  // -----------------------------------
 
   const fetchStats = React.useCallback(async () => {
     try {
@@ -194,6 +320,7 @@ export default function AdminDashboardPage() {
   }, [fetchStats, fetchBookings, fetchOrders, fetchMembers]);
 
   React.useEffect(() => {
+    if (!currentUser) return;
     fetchAll();
     
     const interval = setInterval(() => {
@@ -207,7 +334,7 @@ export default function AdminDashboardPage() {
     }, 5000);
 
     return () => clearInterval(interval);
-  }, [fetchAll, activeNav]);
+  }, [fetchAll, activeNav, currentUser]);
 
   const updateBookingStatus = async (id: string, status: string) => {
     setUpdatingBookingId(id);
@@ -298,6 +425,218 @@ export default function AdminDashboardPage() {
     </div>
   );
 
+  if (isAuthLoading) {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-[#070b14] flex items-center justify-center transition-colors duration-300">
+         <div className="w-10 h-10 border-4 border-brand-court/30 border-t-brand-court rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!currentUser) {
+    return (
+      <main className="min-h-screen bg-slate-50 dark:bg-[#070b14] text-slate-900 dark:text-slate-100 flex flex-col max-w-md mx-auto relative overflow-hidden font-sans transition-colors duration-300">
+        <Toaster theme={isDarkMode ? 'dark' : 'light'} position="top-center" richColors />
+        
+        <div className="absolute top-[-10%] left-[-20%] w-[400px] h-[400px] rounded-full bg-brand-court/20 blur-[150px] pointer-events-none hidden dark:block" />
+        <div className="absolute bottom-[-10%] right-[-20%] w-[300px] h-[300px] rounded-full bg-brand-cafe/10 blur-[120px] pointer-events-none hidden dark:block" />
+        
+        <div className="absolute top-4 right-6 z-20">
+          <button onClick={toggleTheme} className="p-2 rounded-full bg-white dark:bg-white/5 text-slate-500 dark:text-white/50 hover:bg-slate-100 dark:hover:bg-white/10 shadow-sm dark:shadow-none transition-colors">
+            {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
+        </div>
+
+        <div className="flex-1 flex flex-col items-center justify-center px-8 z-10">
+          <div className="w-20 h-20 bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 rounded-3xl flex items-center justify-center mb-8 shadow-sm dark:shadow-[0_0_30px_rgba(0,180,216,0.2)] dark:backdrop-blur-md transition-colors duration-300">
+            <Shield className="w-10 h-10 text-brand-court" />
+          </div>
+          
+          <h1 className="text-3xl font-light tracking-tight text-slate-900 dark:text-white mb-2 text-center">Staff <span className="font-semibold text-brand-court">Portal</span></h1>
+          <p className="text-slate-500 dark:text-white/40 text-sm text-center mb-10">Enter your authorized phone number to access the dashboard.</p>
+
+          <form onSubmit={handleLoginSubmit} className="w-full space-y-6">
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/40 font-semibold">+91</span>
+              <input 
+                type="tel" 
+                value={loginPhone}
+                onChange={e => {
+                  const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                  setLoginPhone(val);
+                }}
+                maxLength={10}
+                placeholder="12345 67890"
+                className="w-full bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] dark:backdrop-blur-md text-slate-900 dark:text-white px-14 py-4 rounded-2xl font-bold tracking-wider outline-none focus:border-brand-court dark:focus:border-brand-court focus:ring-4 focus:ring-brand-court/10 dark:focus:ring-brand-court/20 transition-all shadow-sm dark:shadow-none"
+                autoFocus
+              />
+            </div>
+            
+            <button 
+              type="submit" 
+              className="w-full py-4 rounded-2xl font-bold text-sm shadow-[0_8px_20px_rgba(0,180,216,0.2)] active:scale-[0.98] transition-transform bg-brand-court hover:bg-brand-court/90 border-0 text-white"
+              disabled={isLoggingIn}
+            >
+              {isLoggingIn ? 'Verifying...' : 'Login securely'}
+            </button>
+          </form>
+        </div>
+      </main>
+    );
+  }
+
+  // --- KITCHEN DISPLAY SYSTEM VIEW FOR CHEFS ---
+  if (currentUser.role === 'CHEF') {
+    return (
+      <div className="min-h-screen bg-slate-50 dark:bg-[#070b14] flex flex-col text-slate-900 dark:text-slate-100 font-sans transition-colors duration-300">
+        <Toaster theme={isDarkMode ? 'dark' : 'light'} position="top-right" richColors />
+        <div className="fixed top-[-10%] left-[-10%] w-[500px] h-[500px] rounded-full bg-brand-cafe/10 blur-[150px] pointer-events-none hidden dark:block" />
+
+        <header className="h-16 md:h-20 border-b border-slate-200 dark:border-white/[0.05] bg-white dark:bg-white/[0.01] dark:backdrop-blur-md px-4 md:px-8 flex items-center justify-between shrink-0 z-10 transition-colors duration-300">
+          <div className="flex items-center space-x-4">
+            <Coffee className="w-6 h-6 md:w-8 md:h-8 text-brand-cafe" />
+            <div>
+              <h1 className="text-lg md:text-xl font-bold text-slate-900 dark:text-white/90 tracking-tight">Kitchen Display System</h1>
+              <p className="text-[10px] md:text-xs text-brand-cafe font-semibold uppercase tracking-wider">{currentUser.name}</p>
+            </div>
+          </div>
+          <div className="flex items-center space-x-2 md:space-x-4">
+            <button onClick={() => { setShowInventory(true); fetchInventory(); }} className="flex items-center space-x-1.5 md:space-x-2 px-3 py-1.5 md:px-4 md:py-2 bg-amber-50 dark:bg-brand-cafe/10 text-amber-700 dark:text-brand-cafe font-bold text-[10px] md:text-xs rounded-lg md:rounded-xl hover:bg-amber-100 dark:hover:bg-brand-cafe/20 transition-colors border border-amber-200 dark:border-brand-cafe/20">
+              <Settings className="w-4 h-4" />
+              <span className="hidden sm:inline">Inventory</span>
+            </button>
+            <button onClick={toggleTheme} className="p-1.5 md:p-2 rounded-full bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-white/50 hover:bg-slate-200 dark:hover:bg-white/10 transition-colors">
+              {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+            <button onClick={handleLogout} className="p-1.5 md:p-2 rounded-full bg-red-50 dark:bg-red-500/10 text-red-500 hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors">
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
+        </header>
+
+        <main className="flex-1 p-4 md:p-8 overflow-y-auto z-10">
+          {!flags.FEATURE_RESTAURANT_MENU_BOOKING ? (
+            <div className="bg-white dark:bg-white/[0.02] border-slate-200 dark:border-white/[0.05] border border-dashed rounded-3xl p-8 md:p-12 text-center flex flex-col items-center max-w-2xl mx-auto mt-10">
+              <Coffee className="w-10 h-10 md:w-16 md:h-16 text-slate-300 dark:text-white/20 mb-4" />
+              <h4 className="font-bold text-slate-500 dark:text-white/60 text-lg md:text-xl">Cafe Module Offline</h4>
+              <p className="text-sm text-slate-400 dark:text-white/40 mt-2">The system is currently disabled by the administrator.</p>
+            </div>
+          ) : loadingOrders ? (
+            <LoadingSpinner />
+          ) : orders.length === 0 ? (
+            <div className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] rounded-3xl p-8 md:p-16 text-center text-slate-400 dark:text-white/30 text-sm md:text-base font-medium max-w-2xl mx-auto mt-10">
+              No food orders in the queue. You're all caught up!
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4 md:gap-6">
+              {orders.map((order) => {
+                let parsedItems: { name: string; quantity: number }[] = [];
+                try { parsedItems = JSON.parse(order.items); } catch {}
+
+                return (
+                  <div key={order.id} className="bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] rounded-2xl md:rounded-3xl p-4 md:p-5 shadow-sm dark:shadow-lg dark:backdrop-blur-xl relative overflow-hidden group">
+                    <div className={`absolute top-0 left-0 w-1.5 h-full ${order.status === 'PENDING' ? 'bg-amber-400' : order.status === 'PREPARING' ? 'bg-blue-400' : 'bg-emerald-400'}`} />
+                    
+                    <div className="flex justify-between items-start mb-4 pl-2">
+                      <div>
+                        <div className="flex items-center space-x-2 mb-1">
+                          <span className="font-extrabold text-slate-900 dark:text-white/90 block text-sm">
+                            {order.tableNumber ? `Deliver to: ${order.tableNumber.replace('Court A', 'Court')}` : 'Takeaway'}
+                          </span>
+                          <LiveTimer createdAt={order.createdAt} />
+                        </div>
+                        <span className="text-[11px] text-slate-500 dark:text-white/40 font-medium">{order.user.name || 'Unknown'} · {formatDate(order.createdAt)}</span>
+                      </div>
+                      {statusBadge(order.status)}
+                    </div>
+
+                    <div className="p-4 bg-slate-50 dark:bg-white/[0.02] rounded-2xl border border-slate-100 dark:border-white/[0.04] mb-4">
+                      <ul className="space-y-3">
+                        {parsedItems.map((item, idx) => (
+                          <li key={idx} className="flex justify-between items-center text-sm">
+                            <span className="font-semibold text-slate-700 dark:text-white/80">{item.name}</span>
+                            <span className="font-bold text-slate-500 dark:text-white/60 bg-white dark:bg-white/5 border border-slate-200 dark:border-transparent px-2 py-1 rounded text-xs shadow-sm dark:shadow-none">x{item.quantity}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="flex items-center justify-between pt-2 pl-2">
+                      <span className="text-sm font-extrabold text-slate-900 dark:text-brand-cafe">₹{order.totalAmount.toLocaleString('en-IN')}</span>
+                      
+                      <div className="flex items-center space-x-2">
+                        {order.status === 'PENDING' && (
+                          <>
+                            <button onClick={() => updateOrderStatus(order.id, 'CANCELLED')} disabled={updatingOrderId === order.id} className="flex items-center space-x-1.5 md:space-x-2 px-3 py-1.5 md:px-4 md:py-2 bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 font-bold text-[10px] md:text-xs rounded-lg md:rounded-xl active:scale-95 hover:bg-red-100 dark:hover:bg-red-500/20 transition-all border border-red-200 dark:border-red-500/20 disabled:opacity-50">
+                              {updatingOrderId === order.id ? <Loader2 className="w-3 h-3 md:w-3.5 md:h-3.5 animate-spin" /> : <AlertCircle className="w-3 h-3 md:w-3.5 md:h-3.5" />}
+                              <span>Decline</span>
+                            </button>
+                            <button onClick={() => updateOrderStatus(order.id, 'PREPARING')} disabled={updatingOrderId === order.id} className="flex items-center space-x-1.5 md:space-x-2 px-3 py-1.5 md:px-4 md:py-2 bg-brand-cafe text-white font-bold text-[10px] md:text-xs rounded-lg md:rounded-xl active:scale-95 hover:bg-brand-cafe/90 transition-all shadow-sm dark:shadow-[0_4px_15px_rgba(140,126,115,0.3)] disabled:opacity-50">
+                              {updatingOrderId === order.id ? <Loader2 className="w-3 h-3 md:w-3.5 md:h-3.5 animate-spin" /> : <ChefHat className="w-3 h-3 md:w-3.5 md:h-3.5" />}
+                              <span>Accept</span>
+                            </button>
+                          </>
+                        )}
+                        {order.status === 'PREPARING' && (
+                          <button onClick={() => updateOrderStatus(order.id, 'COMPLETED')} disabled={updatingOrderId === order.id} className="flex items-center space-x-1.5 md:space-x-2 px-3 py-1.5 md:px-4 md:py-2 bg-brand-court text-white font-bold text-[10px] md:text-xs rounded-lg md:rounded-xl active:scale-95 hover:bg-brand-court/90 transition-all shadow-sm dark:shadow-[0_4px_15px_rgba(155,159,96,0.3)] disabled:opacity-50">
+                            {updatingOrderId === order.id ? <Loader2 className="w-3 h-3 md:w-3.5 md:h-3.5 animate-spin" /> : <CheckCircle className="w-3 h-3 md:w-3.5 md:h-3.5" />}
+                            <span>Ready</span>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          )}
+        </main>
+        
+        {/* INVENTORY MODAL */}
+        {showInventory && (
+          <div className="fixed inset-0 bg-slate-900/50 dark:bg-[#070b14]/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+            <div className="bg-white dark:bg-[#0f172a] border border-slate-200 dark:border-white/10 rounded-3xl w-full max-w-lg shadow-2xl overflow-hidden flex flex-col max-h-[80vh]">
+              <div className="p-6 border-b border-slate-100 dark:border-white/5 flex justify-between items-center bg-slate-50 dark:bg-white/[0.02]">
+                <div>
+                  <h3 className="font-bold text-lg text-slate-900 dark:text-white">Menu Inventory</h3>
+                  <p className="text-xs text-slate-500 dark:text-white/40 mt-1">Toggle items to mark them out of stock (86'd).</p>
+                </div>
+                <button onClick={() => setShowInventory(false)} className="p-2 rounded-full hover:bg-slate-200 dark:hover:bg-white/10 text-slate-500 dark:text-white/50 transition-colors">
+                  <AlertCircle className="w-5 h-5 rotate-45" /> {/* Mock X icon */}
+                </button>
+              </div>
+              
+              <div className="p-6 overflow-y-auto flex-1">
+                {loadingInventory ? (
+                  <LoadingSpinner />
+                ) : (
+                  <div className="space-y-4">
+                    {menuItems.map(item => (
+                      <div key={item.id} className="flex justify-between items-center p-4 rounded-2xl border border-slate-200 dark:border-white/5 bg-slate-50 dark:bg-white/[0.02]">
+                        <div>
+                          <p className="font-bold text-sm text-slate-900 dark:text-white/90">{item.name}</p>
+                          <p className="text-[10px] text-slate-500 dark:text-white/40 font-semibold uppercase">{item.category}</p>
+                        </div>
+                        <button
+                          onClick={() => toggleMenuItem(item.id, item.available)}
+                          className={`relative inline-flex h-6 w-11 items-center rounded-full transition-colors ${item.available ? 'bg-emerald-500' : 'bg-slate-300 dark:bg-slate-700'}`}
+                        >
+                          <span className={`inline-block h-4 w-4 transform rounded-full bg-white transition-transform ${item.available ? 'translate-x-6' : 'translate-x-1'}`} />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+      </div>
+    );
+  }
+
+  // --- OWNER VIEW (Standard Dashboard) ---
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-[#070b14] flex flex-col md:flex-row text-slate-900 dark:text-slate-100 font-sans selection:bg-brand-court/20 dark:selection:bg-brand-court/30 transition-colors duration-300">
       
@@ -316,12 +655,20 @@ export default function AdminDashboardPage() {
               Admin
             </span>
           </div>
-          <button 
-            onClick={toggleTheme}
-            className="p-1.5 rounded-full bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white/90 transition-colors"
-          >
-            {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
-          </button>
+          <div className="flex items-center space-x-2">
+            <button 
+              onClick={toggleTheme}
+              className="p-1.5 rounded-full bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-white/50 hover:text-slate-900 dark:hover:text-white/90 transition-colors"
+            >
+              {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+            </button>
+            <button 
+              onClick={handleLogout}
+              className="p-1.5 rounded-full bg-red-50 dark:bg-red-500/10 text-red-500 hover:text-red-600 hover:bg-red-100 dark:hover:bg-red-500/20 transition-colors"
+            >
+              <LogOut className="w-4 h-4" />
+            </button>
+          </div>
         </div>
         
         <nav className="flex-1 p-4 space-y-2">
@@ -366,6 +713,9 @@ export default function AdminDashboardPage() {
             </h1>
           </div>
           <div className="flex items-center space-x-2 md:space-x-4">
+            <button onClick={handleLogout} className="md:hidden p-1.5 rounded-full bg-red-50 dark:bg-red-500/10 text-red-500">
+              <LogOut className="w-4 h-4" />
+            </button>
             <button 
               onClick={toggleTheme}
               className="md:hidden p-1.5 rounded-full bg-slate-100 dark:bg-white/5 text-slate-500 dark:text-white/50"
@@ -625,9 +975,15 @@ export default function AdminDashboardPage() {
                 <div className="space-y-4">
                   <div className="flex items-center justify-between">
                     <h3 className="text-base md:text-lg font-bold text-slate-900 dark:text-white/90">Kitchen Display System</h3>
-                    {flags.FEATURE_RESTAURANT_MENU_BOOKING && (
-                      <div className="text-[10px] md:text-xs font-bold text-amber-700 dark:text-brand-cafe bg-amber-50 dark:bg-brand-cafe/10 px-2 py-1 md:px-3 md:py-1.5 rounded-full border border-amber-200 dark:border-brand-cafe/20">{orders.filter(o => o.status === 'PENDING' || o.status === 'PREPARING').length} pending</div>
-                    )}
+                    <div className="flex items-center space-x-2">
+                      <button onClick={() => { setShowInventory(true); fetchInventory(); }} className="flex items-center space-x-1.5 px-2 py-1 md:px-3 md:py-1.5 bg-slate-100 dark:bg-white/5 text-slate-600 dark:text-white/60 font-bold text-[10px] md:text-xs rounded-lg hover:bg-slate-200 dark:hover:bg-white/10 transition-colors">
+                        <Settings className="w-3.5 h-3.5" />
+                        <span className="hidden sm:inline">Inventory</span>
+                      </button>
+                      {flags.FEATURE_RESTAURANT_MENU_BOOKING && (
+                        <div className="text-[10px] md:text-xs font-bold text-amber-700 dark:text-brand-cafe bg-amber-50 dark:bg-brand-cafe/10 px-2 py-1 md:px-3 md:py-1.5 rounded-full border border-amber-200 dark:border-brand-cafe/20">{orders.filter(o => o.status === 'PENDING' || o.status === 'PREPARING').length} pending</div>
+                      )}
+                    </div>
                   </div>
                   
                   {!flags.FEATURE_RESTAURANT_MENU_BOOKING ? (
@@ -637,9 +993,7 @@ export default function AdminDashboardPage() {
                       <p className="text-[10px] md:text-xs text-slate-400 dark:text-white/40 mt-2 max-w-[200px]">Enable FEATURE_RESTAURANT_MENU_BOOKING to process orders.</p>
                     </div>
                   ) : loadingOrders ? (
-                    <div className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] rounded-3xl h-[300px] md:h-[400px]">
-                      <LoadingSpinner />
-                    </div>
+                    <LoadingSpinner />
                   ) : orders.length === 0 ? (
                     <div className="bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] rounded-3xl p-8 md:p-12 text-center text-slate-400 dark:text-white/30 text-xs md:text-sm font-medium shadow-sm dark:shadow-none">
                       No food orders in the queue.
@@ -658,11 +1012,14 @@ export default function AdminDashboardPage() {
 
                             <div className="flex justify-between items-start mb-3 md:mb-4">
                               <div className="pl-2">
-                                <span className="font-extrabold text-slate-900 dark:text-white/90 block text-xs md:text-sm mb-0.5">
-                                  {order.tableNumber 
-                                    ? `Deliver to: ${order.tableNumber.replace('Court A', 'Court')}` 
-                                    : 'Takeaway'}
-                                </span>
+                                <div className="flex items-center space-x-2 mb-0.5">
+                                  <span className="font-extrabold text-slate-900 dark:text-white/90 block text-xs md:text-sm">
+                                    {order.tableNumber 
+                                      ? `Deliver to: ${order.tableNumber.replace('Court A', 'Court')}` 
+                                      : 'Takeaway'}
+                                  </span>
+                                  <LiveTimer createdAt={order.createdAt} />
+                                </div>
                                 <span className="text-[9px] md:text-[11px] text-slate-500 dark:text-white/40 font-medium">{order.user.name || 'Unknown'} · {formatDate(order.createdAt)}</span>
                               </div>
                               {statusBadge(order.status)}
@@ -686,14 +1043,24 @@ export default function AdminDashboardPage() {
                               
                               <div className="flex items-center space-x-2">
                                 {order.status === 'PENDING' && (
-                                  <button
-                                    onClick={() => updateOrderStatus(order.id, 'PREPARING')}
-                                    disabled={updatingOrderId === order.id}
-                                    className="flex items-center space-x-1.5 md:space-x-2 px-3 py-1.5 md:px-4 md:py-2 bg-brand-cafe text-white font-bold text-[10px] md:text-xs rounded-lg md:rounded-xl active:scale-95 hover:bg-brand-cafe/90 transition-all shadow-sm dark:shadow-[0_4px_15px_rgba(140,126,115,0.3)] disabled:opacity-50"
-                                  >
-                                    {updatingOrderId === order.id ? <Loader2 className="w-3 h-3 md:w-3.5 md:h-3.5 animate-spin" /> : <ChefHat className="w-3 h-3 md:w-3.5 md:h-3.5" />}
-                                    <span>Prepare</span>
-                                  </button>
+                                  <>
+                                    <button
+                                      onClick={() => updateOrderStatus(order.id, 'CANCELLED')}
+                                      disabled={updatingOrderId === order.id}
+                                      className="flex items-center space-x-1.5 md:space-x-2 px-3 py-1.5 md:px-4 md:py-2 bg-red-50 dark:bg-red-500/10 border border-red-200 dark:border-red-500/20 text-red-600 dark:text-red-400 font-bold text-[10px] md:text-xs rounded-lg md:rounded-xl active:scale-95 hover:bg-red-100 dark:hover:bg-red-500/20 transition-all disabled:opacity-50"
+                                    >
+                                      {updatingOrderId === order.id ? <Loader2 className="w-3 h-3 md:w-3.5 md:h-3.5 animate-spin" /> : <AlertCircle className="w-3 h-3 md:w-3.5 md:h-3.5" />}
+                                      <span>Decline</span>
+                                    </button>
+                                    <button
+                                      onClick={() => updateOrderStatus(order.id, 'PREPARING')}
+                                      disabled={updatingOrderId === order.id}
+                                      className="flex items-center space-x-1.5 md:space-x-2 px-3 py-1.5 md:px-4 md:py-2 bg-brand-cafe text-white font-bold text-[10px] md:text-xs rounded-lg md:rounded-xl active:scale-95 hover:bg-brand-cafe/90 transition-all shadow-sm dark:shadow-[0_4px_15px_rgba(140,126,115,0.3)] disabled:opacity-50"
+                                    >
+                                      {updatingOrderId === order.id ? <Loader2 className="w-3 h-3 md:w-3.5 md:h-3.5 animate-spin" /> : <ChefHat className="w-3 h-3 md:w-3.5 md:h-3.5" />}
+                                      <span>Accept</span>
+                                    </button>
+                                  </>
                                 )}
                                 {order.status === 'PREPARING' && (
                                   <button
@@ -702,7 +1069,7 @@ export default function AdminDashboardPage() {
                                     className="flex items-center space-x-1.5 md:space-x-2 px-3 py-1.5 md:px-4 md:py-2 bg-brand-court text-white font-bold text-[10px] md:text-xs rounded-lg md:rounded-xl active:scale-95 hover:bg-brand-court/90 transition-all shadow-sm dark:shadow-[0_4px_15px_rgba(155,159,96,0.3)] disabled:opacity-50"
                                   >
                                     {updatingOrderId === order.id ? <Loader2 className="w-3 h-3 md:w-3.5 md:h-3.5 animate-spin" /> : <CheckCircle className="w-3 h-3 md:w-3.5 md:h-3.5" />}
-                                    <span>Complete</span>
+                                    <span>Ready</span>
                                   </button>
                                 )}
                               </div>

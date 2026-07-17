@@ -12,7 +12,7 @@ model User {
   name      String?
   email     String?   @unique
   phone     String    @unique
-  role      String    @default("CUSTOMER") // "CUSTOMER" | "ADMIN" | "OWNER"
+  role      String    @default("CUSTOMER") // "CUSTOMER" | "ADMIN" | "OWNER" | "CHEF"
   bookings  Booking[]
   orders    Order[]
   createdAt DateTime  @default(now())
