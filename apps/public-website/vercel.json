@@ -1,7 +1,6 @@
 {
   "framework": "nextjs",
-  "rootDirectory": "apps/public-website",
   "installCommand": "cd ../.. && npm install",
-  "buildCommand": "cd ../.. && npm run build -w @paddle-club/public-website",
+  "buildCommand": "npm run build",
   "outputDirectory": ".next"
 }
