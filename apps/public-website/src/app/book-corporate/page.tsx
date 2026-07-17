@@ -47,7 +47,7 @@ export default function BookCorporatePage() {
     <main className="relative min-h-screen flex flex-col bg-black text-slate-100 font-sans">
       <div className="w-full flex-1 flex flex-col bg-brand-dark relative overflow-hidden">
         {/* Ambient Glows */}
-        <div className="absolute top-0 right-[-10%] w-[50%] h-[50%] bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.04)_0%,transparent_65%)] pointer-events-none" />
+        <div className="absolute top-0 right-[-10%] w-[50%] h-[50%] bg-[radial-gradient(circle_at_center,rgb(var(--color-blue)/0.04)_0%,transparent_65%)] pointer-events-none" />
         
         <Navbar />
 
@@ -63,13 +63,13 @@ export default function BookCorporatePage() {
 
           {/* Header */}
           <div className="flex flex-col space-y-2 mb-10">
-            <span className="text-[10px] text-blue-500 font-bold uppercase tracking-[0.25em]">
+            <span className="text-micro text-blue-500 font-bold uppercase tracking-eyebrow">
               Bespoke Event Desk
             </span>
             <h1 className="text-3xl md:text-5xl font-extrabold font-display text-white tracking-tight">
               Request RFP Proposal
             </h1>
-            <p className="text-slate-400 text-xs md:text-sm max-w-xl">
+            <p className="text-slate-400 text-sm md:text-base max-w-xl">
               Provide basic headcount, preferred schedule date, and catering details to receive a custom executive estimate.
             </p>
           </div>
@@ -80,7 +80,7 @@ export default function BookCorporatePage() {
             <div className="lg:col-span-8 space-y-6">
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                  <label className="block text-micro font-bold text-slate-500 uppercase tracking-caps">
                     Company Name
                   </label>
                   <div className="relative">
@@ -97,7 +97,7 @@ export default function BookCorporatePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                  <label className="block text-micro font-bold text-slate-500 uppercase tracking-caps">
                     Contact Person Name
                   </label>
                   <div className="relative">
@@ -116,7 +116,7 @@ export default function BookCorporatePage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                  <label className="block text-micro font-bold text-slate-500 uppercase tracking-caps">
                     Work Email Address
                   </label>
                   <div className="relative">
@@ -133,7 +133,7 @@ export default function BookCorporatePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                  <label className="block text-micro font-bold text-slate-500 uppercase tracking-caps">
                     Mobile Phone Number
                   </label>
                   <div className="relative">
@@ -152,7 +152,7 @@ export default function BookCorporatePage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
                 <div className="space-y-2">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                  <label className="block text-micro font-bold text-slate-500 uppercase tracking-caps">
                     Estimated Guests
                   </label>
                   <select
@@ -168,7 +168,7 @@ export default function BookCorporatePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                  <label className="block text-micro font-bold text-slate-500 uppercase tracking-caps">
                     Event Type Format
                   </label>
                   <select
@@ -184,7 +184,7 @@ export default function BookCorporatePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                  <label className="block text-micro font-bold text-slate-500 uppercase tracking-caps">
                     Preferred Event Date
                   </label>
                   <input
@@ -200,7 +200,7 @@ export default function BookCorporatePage() {
 
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div className="space-y-2">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                  <label className="block text-micro font-bold text-slate-500 uppercase tracking-caps">
                     Reservation Duration
                   </label>
                   <div className="flex space-x-3">
@@ -225,7 +225,7 @@ export default function BookCorporatePage() {
                 </div>
 
                 <div className="space-y-2">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                  <label className="block text-micro font-bold text-slate-500 uppercase tracking-caps">
                     Cafe Brio Catering Requested
                   </label>
                   <div className="flex space-x-3">
@@ -253,21 +253,21 @@ export default function BookCorporatePage() {
 
             {/* Right: Summary Invoice Card */}
             <div className="lg:col-span-4 flex flex-col justify-between">
-              <div className="border border-brand-dark-border/40 rounded-3xl p-6 bg-neutral-950/60 backdrop-blur-md text-xs space-y-5 flex flex-col justify-between h-full shadow-2xl relative overflow-hidden">
+              <div className="border border-brand-dark-border/40 rounded-3xl p-6 bg-neutral-950/60 backdrop-blur-md text-sm space-y-5 flex flex-col justify-between h-full shadow-2xl relative overflow-hidden">
                 <div className="absolute top-0 bottom-0 left-0 w-1 bg-blue-500" />
 
                 <div className="space-y-4">
                   <div className="flex justify-between items-start pb-4 border-b border-neutral-900/60">
                     <div>
-                      <span className="text-[8px] text-slate-500 block uppercase tracking-widest font-bold">RFP PROPOSAL FOR</span>
+                      <span className="text-micro text-slate-500 block uppercase tracking-caps font-bold">RFP PROPOSAL FOR</span>
                       <h4 className="font-extrabold font-display text-white text-base mt-0.5">{companyName || "Your Company"}</h4>
                     </div>
-                    <span className="px-2.5 py-0.5 rounded-full text-[8px] font-extrabold uppercase border border-blue-500/20 text-blue-400 bg-blue-500/10">
+                    <span className="px-2.5 py-0.5 rounded-full text-micro font-extrabold uppercase border border-blue-500/20 text-blue-400 bg-blue-500/10">
                       Corporate
                     </span>
                   </div>
 
-                  <div className="space-y-3 pb-4 border-b border-neutral-900/60 text-[11px]">
+                  <div className="space-y-3 pb-4 border-b border-neutral-900/60 text-sm">
                     <div className="flex justify-between">
                       <span className="text-slate-500 font-medium">Event Format</span>
                       <span className="font-bold text-white text-right">{eventType}</span>
@@ -290,7 +290,7 @@ export default function BookCorporatePage() {
                     </div>
                   </div>
 
-                  <div className="bg-blue-500/5 rounded-2xl p-4 border border-blue-500/10 text-[10px] text-slate-400 flex items-start space-x-2">
+                  <div className="bg-blue-500/5 rounded-2xl p-4 border border-blue-500/10 text-micro text-slate-400 flex items-start space-x-2">
                     <Sparkles className="w-4 h-4 text-blue-400 mt-0.5 flex-shrink-0" />
                     <span>Our event directors review RFP inquiries and issue formal proposals within 2 hours.</span>
                   </div>
@@ -300,7 +300,7 @@ export default function BookCorporatePage() {
                   <button
                     type="submit"
                     disabled={!companyName || !contactName || !email || !phone || !eventDate}
-                    className={`w-full py-4 rounded-2xl font-display font-extrabold uppercase tracking-wider text-xs transition-all flex items-center justify-center space-x-2 ${
+                    className={`w-full py-4 rounded-2xl font-display font-extrabold uppercase tracking-wide text-xs transition-all flex items-center justify-center space-x-2 ${
                       companyName && contactName && email && phone && eventDate
                         ? 'bg-blue-500 hover:bg-blue-400 text-white shadow-blue-500/20 cursor-pointer' 
                         : 'bg-neutral-900 text-slate-600 border border-neutral-850 cursor-not-allowed'
@@ -341,12 +341,12 @@ export default function BookCorporatePage() {
 
               <div className="space-y-2">
                 <h3 className="text-xl font-extrabold font-display text-white">Proposal Request Sent!</h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
+                <p className="text-sm text-slate-400 leading-relaxed">
                   We have received your RFP request for {companyName}. An event hosting specialist will contact you at {email} within 2 hours with customized plans.
                 </p>
               </div>
 
-              <div className="pt-4 border-t border-neutral-900 flex justify-between items-center text-[10px] text-slate-500">
+              <div className="pt-4 border-t border-neutral-900 flex justify-between items-center text-micro text-slate-500">
                 <span>RFP Ref: RFP-{Math.floor(100000 + Math.random() * 900000)}</span>
                 <span>The Paddle Club Agra</span>
               </div>

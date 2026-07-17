@@ -99,12 +99,12 @@ export default function SpecularButton({
   children = 'Get Started',
   size = 'lg',
   radius = 18,
-  tint = '#ffffff',
+  tint = 'var(--color-cafe-bg)',
   tintOpacity = 0,
   blur = 0,
-  textColor = '#f5f5f5',
-  lineColor = '#ffffff',
-  baseColor = '#525252',
+  textColor = 'var(--color-cafe-bg)',
+  lineColor = 'var(--color-cafe-bg)',
+  baseColor = 'var(--color-neutral-800)',
   intensity = 1,
   shineSize = 10,
   shineFade = 40,
@@ -251,7 +251,7 @@ export default function SpecularButton({
       type={type}
       disabled={disabled}
       onClick={onClick}
-      className={`relative m-0 inline-flex cursor-pointer items-center justify-center border-none font-medium leading-none tracking-[0.01em] outline-none transition-transform duration-150 active:scale-[0.97] disabled:cursor-default disabled:opacity-55 disabled:active:scale-100 shadow-[inset_0_1px_0_rgba(255,255,255,0.04),0_8px_24px_rgba(0,0,0,0.25)] focus-visible:outline-2 focus-visible:outline-offset-[3px] ${SIZES[size] || SIZES.md}${className ? ` ${className}` : ''}`}
+      className={`relative m-0 inline-flex cursor-pointer items-center justify-center border-none font-medium leading-none tracking-[0.01em] outline-none transition-transform duration-150 active:scale-[0.97] disabled:cursor-default disabled:opacity-55 disabled:active:scale-100 shadow-[inset_0_1px_0_rgb(var(--color-cafe-bg)/0.04),0_8px_24px_rgb(var(--color-neutral-950)/0.25)] focus-visible:outline-2 focus-visible:outline-offset-[3px] ${SIZES[size] || SIZES.md}${className ? ` ${className}` : ''}`}
       style={{
         '--sb-radius': `${radius}px`,
         '--sb-tint': tint,

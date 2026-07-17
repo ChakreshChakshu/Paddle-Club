@@ -41,8 +41,8 @@ export default function CorporateBookingPage() {
     <main className="relative min-h-screen flex flex-col bg-black text-slate-100 font-sans">
       <div className="w-full flex-1 flex flex-col bg-brand-dark relative">
         {/* Background Glows (Blue/Indigo theme) */}
-        <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-[radial-gradient(circle_at_center,rgba(59,130,246,0.06)_0%,transparent_65%)] pointer-events-none" />
-        <div className="absolute bottom-0 right-[-10%] w-[60%] h-[60%] bg-[radial-gradient(circle_at_center,rgba(99,102,241,0.04)_0%,transparent_65%)] pointer-events-none" />
+        <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-[radial-gradient(circle_at_center,rgb(var(--color-blue)/0.06)_0%,transparent_65%)] pointer-events-none" />
+        <div className="absolute bottom-0 right-[-10%] w-[60%] h-[60%] bg-[radial-gradient(circle_at_center,rgb(var(--color-blue-light)/0.04)_0%,transparent_65%)] pointer-events-none" />
 
         <Navbar />
 
@@ -52,7 +52,7 @@ export default function CorporateBookingPage() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="inline-flex items-center space-x-2 text-blue-500 font-semibold tracking-wider text-xs md:text-sm uppercase mb-4"
+          className="inline-flex items-center space-x-2 text-blue-500 font-semibold tracking-wide text-xs md:text-sm uppercase mb-4"
         >
           <Building2 className="w-4 h-4 text-blue-500" />
           <span>Executive Tournaments & Socials</span>
@@ -71,7 +71,7 @@ export default function CorporateBookingPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="max-w-2xl text-slate-400 text-xs md:text-sm leading-relaxed mb-8"
+          className="max-w-2xl text-slate-400 text-sm md:text-base leading-relaxed mb-8"
         >
           Elevate your team events at Agra's premier sports club. Host bespoke team-building tournaments, product launch socials, and networking meets backed by professional coordination and gourmet catering.
         </motion.p>
@@ -83,7 +83,7 @@ export default function CorporateBookingPage() {
         >
           <button
             onClick={() => router.push("/book-corporate")}
-            className="px-8 py-4 rounded-full font-display font-extrabold uppercase tracking-wider text-xs bg-blue-500 hover:bg-blue-400 text-white shadow-lg shadow-blue-500/20 transition-all flex items-center space-x-2"
+            className="px-8 py-4 rounded-full font-display font-extrabold uppercase tracking-wide text-xs bg-blue-500 hover:bg-blue-400 text-white shadow-lg shadow-blue-500/20 transition-all flex items-center space-x-2"
           >
             <span>Request Event Proposal</span>
             <ArrowRight className="w-4 h-4" />
@@ -94,7 +94,7 @@ export default function CorporateBookingPage() {
       {/* Package Offerings */}
       <section className="w-full px-4 md:px-8 lg:px-12 xl:px-16 pb-24">
         <div className="flex flex-col space-y-2 mb-12 text-center items-center">
-          <span className="text-[10px] text-blue-500 font-bold uppercase tracking-[0.25em]">Event Formats</span>
+          <span className="text-micro text-blue-500 font-bold uppercase tracking-eyebrow">Event Formats</span>
           <h2 className="text-2xl md:text-4xl font-extrabold font-display text-white">Elite Corporate Packages</h2>
         </div>
 
@@ -115,12 +115,12 @@ export default function CorporateBookingPage() {
                     <IconComponent className="w-6 h-6" />
                   </div>
                   <h4 className="text-xl font-bold font-display text-white tracking-tight">{pkg.title}</h4>
-                  <p className="text-slate-400 text-xs leading-relaxed">{pkg.description}</p>
+                  <p className="text-slate-400 text-sm leading-relaxed">{pkg.description}</p>
                 </div>
 
                 <div className="pt-4 border-t border-neutral-900 flex justify-between items-center">
-                  <span className="text-[9px] text-slate-500 uppercase tracking-wider font-semibold">FEATURES</span>
-                  <span className="text-[10px] font-bold text-blue-400 uppercase tracking-wider">{pkg.highlight}</span>
+                  <span className="text-micro text-slate-500 uppercase tracking-wide font-semibold">FEATURES</span>
+                  <span className="text-micro font-bold text-blue-400 uppercase tracking-wide">{pkg.highlight}</span>
                 </div>
               </motion.div>
             )
@@ -133,7 +133,7 @@ export default function CorporateBookingPage() {
 
       {/* Policies / Customization details */}
       <section className="bg-brand-dark-card/30 border-t border-brand-dark-border/40 py-16 px-6">
-        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 text-xs text-slate-400">
+        <div className="max-w-5xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-8 text-sm text-slate-400">
           <div className="flex flex-col space-y-2">
             <h4 className="text-sm font-bold font-display text-white">Court Layouts & Capacities</h4>
             <p>Our facility holds up to 150 guests simultaneously across our pickleball, skyball, and indoor badminton court spaces, supporting custom scheduling formats.</p>

@@ -95,7 +95,7 @@ const CourtCard: React.FC<CourtCardProps> = ({ court, onBook, isFullWidth }) => 
   return (
     <div className="w-full mb-8">
       {/* 1. Spaced-out uppercase tagline above the card */}
-      <span className="text-[10px] md:text-xs uppercase tracking-[0.3em] font-semibold text-slate-500 mb-4 block pl-1">
+      <span className="text-micro md:text-xs uppercase tracking-[0.3em] font-semibold text-slate-500 mb-4 block pl-1">
         {court.category} &bull; {court.type}
       </span>
 
@@ -110,7 +110,7 @@ const CourtCard: React.FC<CourtCardProps> = ({ court, onBook, isFullWidth }) => 
           />
           <div className={`absolute inset-0 ${isFullWidth ? "bg-gradient-to-t md:bg-gradient-to-r" : "bg-gradient-to-t xl:bg-gradient-to-r"} from-neutral-950 via-neutral-950/20 to-transparent pointer-events-none`} />
           
-          <span className="absolute top-4 left-4 z-10 px-3 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-neutral-950/80 border border-neutral-800 text-slate-300 backdrop-blur-md">
+          <span className="absolute top-4 left-4 z-10 px-3 py-1 rounded-full text-micro font-bold uppercase tracking-wide bg-neutral-950/80 border border-neutral-800 text-slate-300 backdrop-blur-md">
             {court.badge}
           </span>
         </div>
@@ -136,26 +136,26 @@ const CourtCard: React.FC<CourtCardProps> = ({ court, onBook, isFullWidth }) => 
 
             {/* Description and metadata */}
             <div className="flex-1 min-w-0">
-              <p className="text-slate-400 text-xs md:text-sm leading-relaxed max-w-md">
+              <p className="text-slate-400 text-sm md:text-base leading-relaxed max-w-md">
                 {court.tagline}
               </p>
               
               {/* Quick specs grid */}
-              <div className="grid grid-cols-2 gap-x-6 gap-y-2.5 mt-4 border-t border-neutral-900 pt-4 text-[9px] uppercase tracking-widest text-slate-500 font-semibold">
+              <div className="grid grid-cols-2 gap-x-6 gap-y-2.5 mt-4 border-t border-neutral-900 pt-4 text-micro uppercase tracking-caps text-slate-500 font-semibold">
                 <div>
-                  <span className="text-slate-600 block text-[8px]">FACILITY RATE</span>
+                  <span className="text-slate-600 block text-micro">FACILITY RATE</span>
                   <span className="text-white font-bold">{court.price} / hr</span>
                 </div>
                 <div>
-                  <span className="text-slate-600 block text-[8px]">SESSIONS</span>
+                  <span className="text-slate-600 block text-micro">SESSIONS</span>
                   <span className="text-brand-court font-bold">{court.facilities}</span>
                 </div>
                 <div>
-                  <span className="text-slate-600 block text-[8px]">FLOOR SYSTEM</span>
+                  <span className="text-slate-600 block text-micro">FLOOR SYSTEM</span>
                   <span className="text-slate-300 font-bold">{court.surface}</span>
                 </div>
                 <div>
-                  <span className="text-slate-600 block text-[8px]">LIGHT INTENSITY</span>
+                  <span className="text-slate-600 block text-micro">LIGHT INTENSITY</span>
                   <span className="text-slate-300 font-bold">{court.lighting}</span>
                 </div>
               </div>
@@ -180,8 +180,8 @@ export default function CourtsPage() {
     <main className="relative min-h-screen flex flex-col bg-black text-slate-100 font-sans">
       <div className="w-full flex-1 flex flex-col bg-brand-dark relative">
         {/* Background Decorative Orbs */}
-        <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-[radial-gradient(circle_at_center,rgba(163,230,53,0.08)_0%,transparent_65%)] pointer-events-none" />
-        <div className="absolute bottom-0 right-[-10%] w-[60%] h-[60%] bg-[radial-gradient(circle_at_center,rgba(244,63,94,0.05)_0%,transparent_65%)] pointer-events-none" />
+        <div className="absolute top-[-10%] left-[-10%] w-[60%] h-[60%] bg-[radial-gradient(circle_at_center,rgb(var(--color-lime-light)/0.08)_0%,transparent_65%)] pointer-events-none" />
+        <div className="absolute bottom-0 right-[-10%] w-[60%] h-[60%] bg-[radial-gradient(circle_at_center,rgb(var(--color-rose)/0.05)_0%,transparent_65%)] pointer-events-none" />
 
         {/* Fixed Navigation */}
         <Navbar />
@@ -192,7 +192,7 @@ export default function CourtsPage() {
           initial={{ opacity: 0, y: -20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6 }}
-          className="inline-flex items-center space-x-2 text-brand-court font-semibold tracking-wider text-xs md:text-sm uppercase mb-4"
+          className="inline-flex items-center space-x-2 text-brand-court font-semibold tracking-wide text-xs md:text-sm uppercase mb-4"
         >
           <Activity className="w-4 h-4 animate-pulse" />
           <span>Professional Arenas</span>
@@ -211,7 +211,7 @@ export default function CourtsPage() {
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
-          className="max-w-xl text-slate-400 text-xs md:text-sm leading-relaxed"
+          className="max-w-xl text-slate-400 text-sm md:text-base leading-relaxed"
         >
           Book state-of-the-art playing fields in Agra. Kiln-dried wood subfloors, professional cushion layers, and non-glare LED spot setups.
         </motion.p>
@@ -255,7 +255,7 @@ export default function CourtsPage() {
               <span>Safety & Gear</span>
             </div>
             <h4 className="text-xl font-bold font-display text-white">Non-Marking Shoes</h4>
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <p className="text-sm text-slate-400 leading-relaxed">
               To keep our professional athletic floors pristine, clean non-marking indoor shoes are strictly mandatory. Gear rental packages (rackets, shuttles, balls) are available at the counter.
             </p>
           </div>
@@ -266,7 +266,7 @@ export default function CourtsPage() {
               <span>Timings & Slots</span>
             </div>
             <h4 className="text-xl font-bold font-display text-white">60-Min Sessions</h4>
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <p className="text-sm text-slate-400 leading-relaxed">
               All bookings are allocated in fixed 60-minute blocks. Please report to the check-in desk 10 minutes prior to your slot time. Extensions depend on real-time court availability.
             </p>
           </div>
@@ -277,7 +277,7 @@ export default function CourtsPage() {
               <span>Rescheduling</span>
             </div>
             <h4 className="text-xl font-bold font-display text-white">Cancellation Policy</h4>
-            <p className="text-xs text-slate-400 leading-relaxed">
+            <p className="text-sm text-slate-400 leading-relaxed">
               Bookings are non-refundable but can be fully rescheduled to any other open slot up to 6 hours before the reserved session time via your booking panel.
             </p>
           </div>

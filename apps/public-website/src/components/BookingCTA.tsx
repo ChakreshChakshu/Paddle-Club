@@ -87,13 +87,13 @@ export default function BookingCTA({ type }: BookingCTAProps) {
         <div className={`absolute -right-24 -top-24 w-96 h-96 rounded-full blur-[100px] pointer-events-none ${theme.glow}`} />
 
         <div className="flex flex-col space-y-2 mb-10">
-          <span className={`text-[10px] font-bold uppercase tracking-[0.25em] ${theme.badge}`}>
+          <span className={`text-micro font-bold uppercase tracking-eyebrow ${theme.badge}`}>
             Reservation Hub
           </span>
           <h2 className="text-3xl md:text-5xl font-extrabold font-display text-white tracking-tight">
             Book Your Session
           </h2>
-          <p className="text-slate-400 text-xs md:text-sm max-w-xl">
+          <p className="text-slate-400 text-sm md:text-base max-w-xl">
             Choose how you would like to book. Install our Progressive Web App (PWA) instantly for offline passes and alerts, or complete reservation via our web portal.
           </p>
         </div>
@@ -113,14 +113,14 @@ export default function BookingCTA({ type }: BookingCTAProps) {
                   <h3 className="text-lg font-bold text-white flex items-center gap-1.5">
                     Instant App Install (PWA) <Sparkles className="w-3.5 h-3.5 text-yellow-400 fill-yellow-400" />
                   </h3>
-                  <p className="text-[11px] text-slate-400">Unlock PWA benefits & receive 15% off first court play</p>
+                  <p className="text-sm text-slate-400">Unlock PWA benefits & receive 15% off first court play</p>
                 </div>
               </div>
 
               {/* App Benefits List */}
               <div className="space-y-3.5 pt-2">
                 {pwaBenefits.map((benefit, i) => (
-                  <div key={i} className="flex items-start space-x-3 text-xs text-slate-300">
+                  <div key={i} className="flex items-start space-x-3 text-sm text-slate-300">
                     <CheckCircle2 className={`w-4 h-4 mt-0.5 shrink-0 ${theme.accentText}`} />
                     <span className="leading-normal">{benefit}</span>
                   </div>
@@ -133,14 +133,14 @@ export default function BookingCTA({ type }: BookingCTAProps) {
               <div className="flex flex-col gap-3 w-full sm:w-auto">
                 <button
                   onClick={handlePWAInstall}
-                  className={`py-3.5 px-6 rounded-xl flex items-center justify-center space-x-2.5 transition-all duration-300 text-xs font-display font-extrabold uppercase tracking-wider ${theme.button}`}
+                  className={`py-3.5 px-6 rounded-xl flex items-center justify-center space-x-2.5 transition-all duration-300 text-xs font-display font-extrabold uppercase tracking-wide ${theme.button}`}
                 >
                   <Download className="w-4 h-4" />
                   <span>{isInstallable ? "Install App Now" : "Install Guide & Help"}</span>
                 </button>
                 
                 {/* Micro OS Badges/Guides */}
-                <div className="flex items-center space-x-3 text-[9px] text-slate-500 font-semibold tracking-wider uppercase">
+                <div className="flex items-center space-x-3 text-micro text-slate-500 font-semibold tracking-wide uppercase">
                   <span className="flex items-center gap-1">
                     <span className="w-1.5 h-1.5 rounded-full bg-blue-500" /> iOS Safari: Tap Share → Add
                   </span>
@@ -171,8 +171,8 @@ export default function BookingCTA({ type }: BookingCTAProps) {
                   <div className="absolute inset-0 bg-neutral-950/20 backdrop-blur-[0.5px]" />
                 </div>
                 <div className="text-left">
-                  <span className="text-[10px] font-bold text-white block">Scan PWA QR</span>
-                  <span className="text-[8px] text-slate-500 block uppercase tracking-wider mt-0.5">Install on iOS/Android</span>
+                  <span className="text-micro font-bold text-white block">Scan PWA QR</span>
+                  <span className="text-micro text-slate-500 block uppercase tracking-wide mt-0.5">Install on iOS/Android</span>
                 </div>
               </div>
             </div>
@@ -190,18 +190,18 @@ export default function BookingCTA({ type }: BookingCTAProps) {
                 </div>
                 <div>
                   <h3 className="text-lg font-bold text-white">Continue via Web</h3>
-                  <p className="text-[11px] text-slate-400">Reserve slots instantly in your browser</p>
+                  <p className="text-sm text-slate-400">Reserve slots instantly in your browser</p>
                 </div>
               </div>
 
-              <p className="text-xs text-slate-300 leading-relaxed pt-2">
+              <p className="text-sm text-slate-300 leading-relaxed pt-2">
                 Prefer to book online? Access our web interface to secure courts, dining spots, or submit RFP proposals in a few simple steps.
               </p>
             </div>
 
             <div className="relative z-10 pt-8 mt-6 border-t border-neutral-900/40">
               <Link href={webBookingUrl} className="block w-full">
-                <button className={`w-full py-4 rounded-xl flex items-center justify-center space-x-2 transition-all duration-300 text-xs font-display font-extrabold uppercase tracking-wider ${theme.button}`}>
+                <button className={`w-full py-4 rounded-xl flex items-center justify-center space-x-2 transition-all duration-300 text-xs font-display font-extrabold uppercase tracking-wide ${theme.button}`}>
                   <span>Book Now</span>
                   <ArrowRight className="w-4 h-4" />
                 </button>

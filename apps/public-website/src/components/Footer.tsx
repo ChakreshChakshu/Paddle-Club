@@ -31,14 +31,14 @@ export function Footer() {
                 THE PADDLE <span className="text-brand-court">CLUB</span>
               </span>
             </a>
-            <p className="text-slate-400 text-xs md:text-sm leading-relaxed max-w-md">
+            <p className="text-slate-400 text-sm md:text-base leading-relaxed max-w-md">
               Agra's premier sports club featuring professional-grade pickleball courts, high-end indoor badminton facilities, and artisan dining at Cafe Brio. Play, dine, and socialize in a luxury environment.
             </p>
           </div>
 
           {/* About Us (2 columns) */}
           <div className="lg:col-span-2 flex flex-col space-y-3.5">
-            <h4 className="text-white font-bold text-xs uppercase tracking-wider">About Us</h4>
+            <h4 className="text-white font-bold text-xs uppercase tracking-wide">About Us</h4>
             <ul className="space-y-2 text-xs md:text-sm">
               {["Our Story", "Meet the Coaches", "Careers", "Membership"].map((item) => (
                 <li key={item}>
@@ -52,10 +52,10 @@ export function Footer() {
 
           {/* Helpful Links (2 columns) */}
           <div className="lg:col-span-2 flex flex-col space-y-3.5">
-            <h4 className="text-white font-bold text-xs uppercase tracking-wider">Helpful Links</h4>
+            <h4 className="text-white font-bold text-xs uppercase tracking-wide">Helpful Links</h4>
             <ul className="space-y-2 text-xs md:text-sm">
               {["FAQs", "Court Policies", "Cafe Menu", "Corporate Events"].map((item) => {
-                let link = "/#location"
+                let link = "/#about"
                 if (item === "Court Policies") link = "/courts"
                 if (item === "Cafe Menu") link = "/cafe"
                 if (item === "Corporate Events") link = "/corporate"
@@ -72,7 +72,7 @@ export function Footer() {
 
           {/* Contact Us (3 columns) */}
           <div className="lg:col-span-3 flex flex-col space-y-3.5">
-            <h4 className="text-white font-bold text-xs uppercase tracking-wider">Contact Us</h4>
+            <h4 className="text-white font-bold text-xs uppercase tracking-wide">Contact Us</h4>
             <ul className="space-y-2.5 text-xs md:text-sm text-slate-400">
               <li className="flex items-center space-x-3">
                 <Mail className="w-4 h-4 text-brand-court flex-shrink-0" />
@@ -136,7 +136,7 @@ export function Footer() {
 
       {/* Giant Outlined Background Text (Bound to bottom-0 to prevent flex scroll overflow gap) */}
       <div className="absolute bottom-0 left-0 right-0 pointer-events-none select-none z-0 overflow-hidden flex justify-center items-end h-32 sm:h-48 md:h-64">
-        <span className="text-transparent font-display font-extrabold uppercase tracking-[0.12em] text-[15vw] sm:text-[18vw] leading-none opacity-[0.03] select-none pointer-events-none [-webkit-text-stroke:1px_rgba(255,255,255,0.15)]">
+        <span className="text-transparent font-display font-extrabold uppercase tracking-[0.12em] text-[15vw] sm:text-[18vw] leading-none opacity-[0.03] select-none pointer-events-none [-webkit-text-stroke:1px_rgb(var(--color-cafe-bg)/0.15)]">
           PADDLE
         </span>
       </div>

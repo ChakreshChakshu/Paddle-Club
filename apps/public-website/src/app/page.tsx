@@ -65,12 +65,12 @@ export default function HomePage() {
                 <SpecularButton
                   size="lg"
                   radius={24}
-                  tint="#ffffff"
+                  tint="var(--color-cafe-bg)"
                   tintOpacity={0.05}
                   blur={4}
-                  textColor="#ffffff"
-                  lineColor="#a3e635"
-                  baseColor="#27272a"
+                  textColor="var(--color-cafe-bg)"
+                  lineColor="var(--color-lime-light)"
+                  baseColor="var(--color-neutral-800)"
                   intensity={1.2}
                   shineSize={12}
                   shineFade={45}
@@ -78,7 +78,7 @@ export default function HomePage() {
                   speed={0.3}
                   followMouse
                   proximity={250}
-                  className="w-full sm:w-auto font-display font-bold uppercase tracking-wider shadow-lg"
+                  className="w-full sm:w-auto font-display font-bold uppercase tracking-wide shadow-lg"
                 >
                   Book Court Session
                 </SpecularButton>
@@ -101,7 +101,7 @@ export default function HomePage() {
             transition={{ duration: 0.6 }}
             className="flex flex-col items-center text-center space-y-3"
           >
-            <div className="inline-flex items-center space-x-2 text-brand-court font-semibold tracking-wider text-xs md:text-sm uppercase">
+            <div className="inline-flex items-center space-x-2 text-brand-court font-semibold tracking-wide text-xs md:text-sm uppercase">
               <span className="w-1.5 h-1.5 rounded-full bg-brand-court animate-pulse" />
               <span>Championship Play</span>
             </div>
@@ -149,7 +149,7 @@ export default function HomePage() {
                     transition={{ delay: 0.2 + idx * 0.1, duration: 0.5 }}
                     className="flex items-center space-x-3 text-slate-300"
                   >
-                    <span className="flex-shrink-0 w-5 h-5 rounded-full bg-brand-court/20 flex items-center justify-center text-brand-court text-[10px] font-bold shadow-md shadow-palm-leaf-500/10">✓</span>
+                    <span className="flex-shrink-0 w-5 h-5 rounded-full bg-brand-court/20 flex items-center justify-center text-brand-court text-micro font-bold shadow-md shadow-palm-leaf-500/10">✓</span>
                     <span className="font-semibold text-sm md:text-base">{item}</span>
                   </motion.li>
                 ))}
@@ -157,7 +157,7 @@ export default function HomePage() {
               <div className="flex-shrink-0 w-full sm:w-auto">
                 <a href="/courts" className="block w-full sm:w-auto">
                   <Button variant="primary" size="lg" className="w-full sm:w-auto shadow-lg shadow-palm-leaf-500/20 group relative overflow-hidden px-8 py-4">
-                    <span className="relative z-10 flex items-center justify-center font-display font-bold uppercase tracking-wider text-xs md:text-sm">
+                    <span className="relative z-10 flex items-center justify-center font-display font-bold uppercase tracking-wide text-xs md:text-sm">
                       Book Court Now
                     </span>
                     <div className="absolute inset-0 bg-gradient-to-r from-brand-court to-brand-court-light opacity-0 group-hover:opacity-100 transition-opacity duration-300 -z-10" />
@@ -172,7 +172,7 @@ export default function HomePage() {
         <section className="w-full">
           <div className="mx-auto grid w-full max-w-6xl grid-cols-1 items-center gap-12 py-12 md:grid-cols-2">
             <ContainerStagger className="flex flex-col space-y-6 animate-fade-in">
-              <ContainerAnimated className="inline-flex items-center space-x-2 text-brand-cafe font-semibold tracking-wider text-xs md:text-sm uppercase">
+              <ContainerAnimated className="inline-flex items-center space-x-2 text-brand-cafe font-semibold tracking-wide text-xs md:text-sm uppercase">
                 <Coffee className="w-4 h-4 text-brand-cafe animate-pulse" />
                 <span>Social & Dine</span>
               </ContainerAnimated>
@@ -200,7 +200,7 @@ export default function HomePage() {
 
               <ContainerAnimated className="pt-2">
                 <a href={showCafeBooking ? '/cafe#book' : '/cafe'}>
-                  <ShadcnButton className="bg-brand-cafe hover:bg-brand-cafe/90 text-white font-display font-bold uppercase tracking-wider px-8 py-6 rounded-xl shadow-lg shadow-brand-cafe/20 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]">
+                  <ShadcnButton className="bg-brand-cafe hover:bg-brand-cafe/90 text-white font-display font-bold uppercase tracking-wide px-8 py-6 rounded-xl shadow-lg shadow-brand-cafe/20 transition-all duration-300 hover:scale-[1.02] active:scale-[0.98]">
                     {showCafeBooking ? 'Book a Table' : 'Cafe Gallery'}
                   </ShadcnButton>
                 </a>

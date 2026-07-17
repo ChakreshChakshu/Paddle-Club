@@ -2,7 +2,7 @@
 
 import * as React from 'react';
 import { Button } from '@paddle-club/ui';
-import { Menu, X, ArrowRight, Activity, Coffee, MapPin, ShieldCheck, Building2 } from 'lucide-react';
+import { Menu, X, ArrowRight, Activity, Coffee, ShieldCheck, Building2 } from 'lucide-react';
 
 export function Navbar() {
   const [isOpen, setIsOpen] = React.useState(false);
@@ -65,13 +65,7 @@ export function Navbar() {
             <Building2 className="w-3.5 h-3.5 text-blue-400" />
             <span>Corporate</span>
           </a>
-          <a
-            href="/#location"
-            className="flex items-center space-x-1.5 px-4 py-2 text-xs font-semibold text-slate-300 hover:text-white rounded-full hover:bg-brand-dark-card/50 transition-all"
-          >
-            <MapPin className="w-3.5 h-3.5 text-brand-court-light" />
-            <span>Location</span>
-          </a>
+
         </div>
 
         {/* CTA Button */}
@@ -149,19 +143,7 @@ export function Navbar() {
               </div>
             </a>
  
-            <a
-              href="/#location"
-              onClick={() => setIsOpen(false)}
-              className="flex items-center space-x-3 p-4 rounded-xl bg-brand-dark-card/50 border border-brand-dark-border/40 hover:border-brand-court/30 transition-all"
-            >
-              <div className="p-2 bg-brand-court/10 rounded-lg">
-                <MapPin className="w-5 h-5 text-brand-court-light" />
-              </div>
-              <div>
-                <h4 className="font-bold text-white text-sm">Location</h4>
-                <p className="text-xs text-slate-400">Find our DayalBagh, Agra sports center</p>
-              </div>
-            </a>
+
           </div>
 
           <div className="space-y-4 pb-12">

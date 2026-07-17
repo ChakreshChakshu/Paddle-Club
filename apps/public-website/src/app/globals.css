@@ -2,11 +2,70 @@
 @tailwind components;
 @tailwind utilities;
 
-html {
-  scroll-behavior: smooth;
-}
+@layer base {
+  :root {
+    /* Typography Scale */
+    --fs-micro: 0.625rem;
+    --fs-label: 0.75rem;
+    --fs-caption: 0.875rem;
 
-body {
-  background-color: #18180c;
-  color: #f6f6ee;
+    --lh-micro: 1.4;
+    --lh-label: 1.5;
+    --lh-caption: 1.6;
+
+    --ls-tight: -0.02em;
+    --ls-normal: 0;
+    --ls-wide: 0.05em;
+    --ls-caps: 0.1em;
+    --ls-eyebrow: 0.25em;
+
+    /* Brand — Court (Palm Leaf) */
+    --color-court: 155 159 96;
+    --color-court-light: 195 198 159;
+    --color-court-dark: 93 96 57;
+    --color-court-lime: 255 255 51;
+
+    /* Brand — Cafe (Silver) */
+    --color-cafe: 140 126 115;
+    --color-cafe-light: 186 178 171;
+    --color-cafe-dark: 84 76 69;
+    --color-cafe-bg: 246 246 238;
+
+    /* Brand — Dark (Olive Black) */
+    --color-dark: 24 24 12;
+    --color-dark-card: 34 34 17;
+    --color-dark-border: 68 68 34;
+
+    /* Accent — Courts */
+    --color-lime: 132 204 22;
+    --color-lime-light: 163 230 53;
+    --color-sky: 14 165 233;
+    --color-sky-light: 56 189 248;
+    --color-rose: 244 63 94;
+    --color-rose-light: 251 113 133;
+
+    /* Accent — Cafe / Corporate */
+    --color-amber: 245 158 11;
+    --color-amber-light: 251 191 36;
+    --color-blue: 59 130 246;
+    --color-blue-light: 96 165 250;
+
+    /* Neutrals */
+    --color-neutral-800: 38 38 38;
+    --color-neutral-900: 23 23 23;
+    --color-neutral-950: 10 10 10;
+  }
+
+  html {
+    scroll-behavior: smooth;
+    text-rendering: optimizeLegibility;
+    -webkit-font-smoothing: antialiased;
+    -moz-osx-font-smoothing: grayscale;
+    font-feature-settings: 'kern' 1, 'liga' 1, 'calt' 1;
+  }
+
+  body {
+    background-color: rgb(var(--color-dark) / 1);
+    color: rgb(var(--color-cafe-bg) / 1);
+  }
 }

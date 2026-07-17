@@ -155,13 +155,13 @@ function BookingFormInner() {
 
       {/* Header */}
       <div className="flex flex-col space-y-2 mb-10">
-        <span className={`text-[10px] font-bold uppercase tracking-[0.25em] ${accentText}`}>
+        <span className={`text-micro font-bold uppercase tracking-eyebrow ${accentText}`}>
           Unified Reservation Desk
         </span>
         <h1 className="text-3xl md:text-5xl font-extrabold font-display text-white tracking-tight">
           Secure Your Slot
         </h1>
-        <p className="text-slate-400 text-xs md:text-sm max-w-xl">
+        <p className="text-slate-400 text-sm md:text-base max-w-xl">
           Complete your booking below. Choose between Court booking and Cafe table reservations.
         </p>
       </div>
@@ -171,7 +171,7 @@ function BookingFormInner() {
         <button
           type="button"
           onClick={() => setBookingType("courts")}
-          className={`flex-1 py-3 px-4 rounded-xl border font-display font-extrabold uppercase tracking-wider text-xs transition-all duration-300 ${
+          className={`flex-1 py-3 px-4 rounded-xl border font-display font-extrabold uppercase tracking-wide text-xs transition-all duration-300 ${
             isCourts 
               ? "border-white bg-white text-brand-dark" 
               : "border-neutral-900 bg-neutral-950/40 text-slate-400 hover:border-neutral-800"
@@ -182,7 +182,7 @@ function BookingFormInner() {
         <button
           type="button"
           onClick={() => setBookingType("cafe")}
-          className={`flex-1 py-3 px-4 rounded-xl border font-display font-extrabold uppercase tracking-wider text-xs transition-all duration-300 ${
+          className={`flex-1 py-3 px-4 rounded-xl border font-display font-extrabold uppercase tracking-wide text-xs transition-all duration-300 ${
             !isCourts 
               ? "border-white bg-white text-brand-dark" 
               : "border-neutral-900 bg-neutral-950/40 text-slate-400 hover:border-neutral-800"
@@ -201,7 +201,7 @@ function BookingFormInner() {
               <>
                 {/* Step 1: Arena Choice */}
                 <div className="space-y-3.5">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                  <label className="block text-micro font-bold text-slate-500 uppercase tracking-caps">
                     1. Choose an Arena
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
@@ -224,13 +224,13 @@ function BookingFormInner() {
                             }`} />
                           )}
                           <div>
-                            <span className={`text-[8px] font-extrabold uppercase tracking-widest px-2 py-0.5 rounded-full border ${court.badgeClass} mb-3 inline-block`}>
+                            <span className={`text-micro font-extrabold uppercase tracking-caps px-2 py-0.5 rounded-full border ${court.badgeClass} mb-3 inline-block`}>
                               {court.type}
                             </span>
                             <h4 className="font-bold font-display text-white text-sm tracking-tight">{court.name}</h4>
                           </div>
                           <div className="mt-4 pt-2 border-t border-neutral-900/50 flex justify-between items-center w-full">
-                            <span className="text-[8px] text-slate-500 uppercase tracking-wider font-semibold">RATE</span>
+                            <span className="text-micro text-slate-500 uppercase tracking-wide font-semibold">RATE</span>
                             <span className="text-xs font-extrabold text-white">{court.price}/hr</span>
                           </div>
                         </button>
@@ -241,7 +241,7 @@ function BookingFormInner() {
 
                 {/* Step 2: Date Selector */}
                 <div className="space-y-3.5">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                  <label className="block text-micro font-bold text-slate-500 uppercase tracking-caps">
                     2. Select Play Date
                   </label>
                   <div className="grid grid-cols-5 gap-2">
@@ -258,9 +258,9 @@ function BookingFormInner() {
                               : 'border-neutral-900 bg-neutral-950/40 text-slate-400 hover:border-neutral-800 hover:bg-neutral-950'
                           }`}
                         >
-                          <span className="text-[8px] uppercase font-bold tracking-wider">{day.formatted.split(",")[0]}</span>
+                          <span className="text-micro uppercase font-bold tracking-wide">{day.formatted.split(",")[0]}</span>
                           <span className="text-base font-extrabold mt-1">{day.formatted.split(" ")[2]}</span>
-                          <span className="text-[8px] uppercase text-slate-500 font-semibold mt-0.5">{day.formatted.split(" ")[1]}</span>
+                          <span className="text-micro uppercase text-slate-500 font-semibold mt-0.5">{day.formatted.split(" ")[1]}</span>
                         </button>
                       )
                     })}
@@ -269,7 +269,7 @@ function BookingFormInner() {
 
                 {/* Step 3: Time Slot Grid */}
                 <div className="space-y-3.5">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                  <label className="block text-micro font-bold text-slate-500 uppercase tracking-caps">
                     3. Select Session Time
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
@@ -280,7 +280,7 @@ function BookingFormInner() {
                           key={slot.value}
                           type="button"
                           onClick={() => setCourtTime(slot.value)}
-                          className={`py-2.5 px-2 rounded-xl border text-center transition-all duration-300 text-[10px] font-bold ${
+                          className={`py-2.5 px-2 rounded-xl border text-center transition-all duration-300 text-micro font-bold ${
                             isSelected 
                               ? `border-lime-500 bg-lime-500/10 ${selectedCourt.textColor}`
                               : 'border-neutral-900 bg-neutral-950/40 text-slate-400 hover:border-neutral-800 hover:bg-neutral-950'
@@ -295,7 +295,7 @@ function BookingFormInner() {
 
                 {/* Step 4: Player Info */}
                 <div className="space-y-3.5">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                  <label className="block text-micro font-bold text-slate-500 uppercase tracking-caps">
                     4. Player Contact Details
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -328,7 +328,7 @@ function BookingFormInner() {
               <>
                 {/* Step 1: Party Size */}
                 <div className="space-y-3.5">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                  <label className="block text-micro font-bold text-slate-500 uppercase tracking-caps">
                     1. Party Size
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
@@ -354,7 +354,7 @@ function BookingFormInner() {
 
                 {/* Step 2: Date Selector */}
                 <div className="space-y-3.5">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                  <label className="block text-micro font-bold text-slate-500 uppercase tracking-caps">
                     2. Select Dining Date
                   </label>
                   <div className="grid grid-cols-5 gap-2">
@@ -371,9 +371,9 @@ function BookingFormInner() {
                               : "border-neutral-900 bg-neutral-950/40 text-slate-400 hover:border-neutral-800 hover:bg-neutral-950"
                           }`}
                         >
-                          <span className="text-[8px] uppercase font-bold tracking-wider">{day.formatted.split(",")[0]}</span>
+                          <span className="text-micro uppercase font-bold tracking-wide">{day.formatted.split(",")[0]}</span>
                           <span className="text-base font-extrabold mt-1">{day.formatted.split(" ")[2]}</span>
-                          <span className="text-[8px] uppercase text-slate-500 font-semibold mt-0.5">{day.formatted.split(" ")[1]}</span>
+                          <span className="text-micro uppercase text-slate-500 font-semibold mt-0.5">{day.formatted.split(" ")[1]}</span>
                         </button>
                       )
                     })}
@@ -382,7 +382,7 @@ function BookingFormInner() {
 
                 {/* Step 3: Time Slot Grid */}
                 <div className="space-y-3.5">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                  <label className="block text-micro font-bold text-slate-500 uppercase tracking-caps">
                     3. Select Dining Time
                   </label>
                   <div className="grid grid-cols-2 sm:grid-cols-5 gap-2">
@@ -393,7 +393,7 @@ function BookingFormInner() {
                           key={time}
                           type="button"
                           onClick={() => setCafeTime(time)}
-                          className={`py-2.5 px-3 rounded-xl border text-center transition-all duration-300 text-[11px] font-bold ${
+                          className={`py-2.5 px-3 rounded-xl border text-center transition-all duration-300 text-xs font-bold ${
                             isSelected 
                               ? "border-amber-500 bg-amber-500/10 text-amber-400"
                               : "border-neutral-900 bg-neutral-950/40 text-slate-400 hover:border-neutral-800 hover:bg-neutral-950"
@@ -408,7 +408,7 @@ function BookingFormInner() {
 
                 {/* Step 4: Contact details */}
                 <div className="space-y-3.5">
-                  <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-widest">
+                  <label className="block text-micro font-bold text-slate-500 uppercase tracking-caps">
                     4. Contact Details
                   </label>
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
@@ -443,7 +443,7 @@ function BookingFormInner() {
 
         {/* Right column: receipt info */}
         <div className="lg:col-span-4 flex flex-col justify-between">
-          <div className="border border-brand-dark-border/40 rounded-3xl p-6 bg-neutral-950/60 backdrop-blur-md text-xs space-y-5 flex flex-col justify-between h-full shadow-2xl relative overflow-hidden">
+          <div className="border border-brand-dark-border/40 rounded-3xl p-6 bg-neutral-950/60 backdrop-blur-md text-sm space-y-5 flex flex-col justify-between h-full shadow-2xl relative overflow-hidden">
             <div className="absolute top-0 bottom-0 left-0 w-1 bg-gradient-to-b from-transparent via-white/5 to-transparent" />
             
             {isCourts ? (
@@ -455,15 +455,15 @@ function BookingFormInner() {
                 <div className="space-y-4">
                   <div className="flex justify-between items-start pb-4 border-b border-neutral-900/60">
                     <div>
-                      <span className="text-[8px] text-slate-500 block uppercase tracking-widest font-bold">RESERVATION FOR</span>
+                      <span className="text-micro text-slate-500 block uppercase tracking-caps font-bold">RESERVATION FOR</span>
                       <h4 className="font-extrabold font-display text-white text-base mt-0.5">{selectedCourt.name}</h4>
                     </div>
-                    <span className={`px-2.5 py-0.5 rounded-full text-[8px] font-extrabold uppercase border ${selectedCourt.badgeClass}`}>
+                    <span className={`px-2.5 py-0.5 rounded-full text-micro font-extrabold uppercase border ${selectedCourt.badgeClass}`}>
                       {selectedCourt.type}
                     </span>
                   </div>
 
-                  <div className="space-y-3 pb-4 border-b border-neutral-900/60 text-[11px]">
+                  <div className="space-y-3 pb-4 border-b border-neutral-900/60 text-sm">
                     <div className="flex justify-between">
                       <span className="text-slate-500 font-medium">Schedule Date</span>
                       <span className="font-bold text-white">{courtDate || "Select Date"}</span>
@@ -478,7 +478,7 @@ function BookingFormInner() {
                     </div>
                   </div>
 
-                  <div className="space-y-2 pt-1 text-[11px]">
+                  <div className="space-y-2 pt-1 text-sm">
                     <div className="flex justify-between text-slate-400">
                       <span>Base rate / hr</span>
                       <span className="font-bold text-white">{selectedCourt.price}</span>
@@ -500,7 +500,7 @@ function BookingFormInner() {
                   <button
                     type="submit"
                     disabled={!courtDate || !courtTime || !courtName || !courtPhone}
-                    className={`w-full py-4 rounded-2xl font-display font-extrabold uppercase tracking-wider text-xs transition-all flex items-center justify-center space-x-2 ${
+                    className={`w-full py-4 rounded-2xl font-display font-extrabold uppercase tracking-wide text-xs transition-all flex items-center justify-center space-x-2 ${
                       courtDate && courtTime && courtName && courtPhone 
                         ? `${selectedCourt.btnClass} cursor-pointer` 
                         : 'bg-neutral-900 text-slate-600 border border-neutral-850 cursor-not-allowed'
@@ -518,15 +518,15 @@ function BookingFormInner() {
                 <div className="space-y-4">
                   <div className="flex justify-between items-start pb-4 border-b border-neutral-900/60">
                     <div>
-                      <span className="text-[8px] text-slate-500 block uppercase tracking-widest font-bold">RESERVATION AT</span>
+                      <span className="text-micro text-slate-500 block uppercase tracking-caps font-bold">RESERVATION AT</span>
                       <h4 className="font-extrabold font-display text-white text-base mt-0.5">Cafe Brio</h4>
                     </div>
-                    <span className="px-2.5 py-0.5 rounded-full text-[8px] font-extrabold uppercase border border-amber-500/20 text-amber-400 bg-amber-500/10">
+                    <span className="px-2.5 py-0.5 rounded-full text-micro font-extrabold uppercase border border-amber-500/20 text-amber-400 bg-amber-500/10">
                       Gourmet
                     </span>
                   </div>
 
-                  <div className="space-y-3 pb-4 border-b border-neutral-900/60 text-[11px]">
+                  <div className="space-y-3 pb-4 border-b border-neutral-900/60 text-sm">
                     <div className="flex justify-between">
                       <span className="text-slate-500 font-medium">Party Size</span>
                       <span className="font-bold text-white">{partySize}</span>
@@ -545,7 +545,7 @@ function BookingFormInner() {
                     </div>
                   </div>
 
-                  <div className="bg-amber-500/5 rounded-2xl p-4 border border-amber-500/10 text-[10px] text-slate-400 flex items-start space-x-2">
+                  <div className="bg-amber-500/5 rounded-2xl p-4 border border-amber-500/10 text-micro text-slate-400 flex items-start space-x-2">
                     <ChefHat className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
                     <span>No advance booking fees. Tables are held for 15 minutes past the slot reservation time.</span>
                   </div>
@@ -555,7 +555,7 @@ function BookingFormInner() {
                   <button
                     type="submit"
                     disabled={!cafeDate || !cafeTime || !cafeName || !cafePhone}
-                    className={`w-full py-4 rounded-2xl font-display font-extrabold uppercase tracking-wider text-xs transition-all flex items-center justify-center space-x-2 ${
+                    className={`w-full py-4 rounded-2xl font-display font-extrabold uppercase tracking-wide text-xs transition-all flex items-center justify-center space-x-2 ${
                       cafeDate && cafeTime && cafeName && cafePhone 
                         ? 'bg-amber-500 hover:bg-amber-400 text-brand-dark shadow-amber-500/20 cursor-pointer' 
                         : 'bg-neutral-900 text-slate-600 border border-neutral-850 cursor-not-allowed'
@@ -599,7 +599,7 @@ function BookingFormInner() {
 
               <div className="space-y-2">
                 <h3 className="text-xl font-extrabold font-display text-white">Booking Confirmed!</h3>
-                <p className="text-xs text-slate-400 leading-relaxed">
+                <p className="text-sm text-slate-400 leading-relaxed">
                   {isCourts 
                     ? `Your slot at ${selectedCourt.name} has been secured for ${courtDate} at ${courtTime}. We look forward to seeing you on the arena.`
                     : `Your dining table for ${partySize} has been reserved for ${cafeDate} at ${cafeTime}. See you at Cafe Brio.`
@@ -607,7 +607,7 @@ function BookingFormInner() {
                 </p>
               </div>
 
-              <div className="pt-4 border-t border-neutral-900 flex justify-between items-center text-[10px] text-slate-500">
+              <div className="pt-4 border-t border-neutral-900 flex justify-between items-center text-micro text-slate-500">
                 <span>Confirmation ID: TPC-{Math.floor(100000 + Math.random() * 900000)}</span>
                 <span>Agra, Uttar Pradesh</span>
               </div>
@@ -624,7 +624,7 @@ export default function BookingPage() {
     <main className="relative min-h-screen flex flex-col bg-black text-slate-100 font-sans">
       <div className="w-full flex-1 flex flex-col bg-brand-dark relative overflow-hidden">
         {/* Background glow orbs */}
-        <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-[radial-gradient(circle_at_center,rgba(255,255,255,0.015)_0%,transparent_65%)] pointer-events-none" />
+        <div className="absolute top-0 left-0 w-[500px] h-[500px] bg-[radial-gradient(circle_at_center,rgb(var(--color-cafe-bg)/0.015)_0%,transparent_65%)] pointer-events-none" />
         
         <Navbar />
 
