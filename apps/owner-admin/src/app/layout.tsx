@@ -19,6 +19,7 @@ const displayFont = Space_Grotesk({
 export const metadata: Metadata = {
   title: 'The Paddle Club | Owner Portal',
   description: 'Manage court bookings, Cafe Brio menu, and WhatsApp automations.',
+  manifest: '/manifest.json',
 };
 
 export default function RootLayout({
@@ -28,6 +29,10 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className={`${sansFont.variable} ${displayFont.variable}`}>
+      <head>
+        <meta name="theme-color" content="#ffffff" />
+        <link rel="apple-touch-icon" href="/icons/icon-192x192.png" />
+      </head>
       <body className="font-sans antialiased min-h-screen bg-brand-dark text-slate-100">
         {children}
       </body>

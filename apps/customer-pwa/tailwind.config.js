@@ -2,6 +2,7 @@ const sharedConfig = require('@paddle-club/tailwind-config');
 
 module.exports = {
   ...sharedConfig,
+  darkMode: 'class',
   content: [
     ...sharedConfig.content,
     "./src/pages/**/*.{js,ts,jsx,tsx,mdx}",

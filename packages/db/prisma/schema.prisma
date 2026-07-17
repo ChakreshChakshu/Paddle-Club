@@ -12,7 +12,7 @@ model User {
   name      String?
   email     String?   @unique
   phone     String    @unique
-  role      String    @default("CUSTOMER") // "CUSTOMER" | "ADMIN" | "OWNER"
+  role      String    @default("CUSTOMER") // "CUSTOMER" | "ADMIN" | "OWNER" | "CHEF"
   bookings  Booking[]
   orders    Order[]
   createdAt DateTime  @default(now())
@@ -22,7 +22,7 @@ model User {
 model Court {
   id          String    @id @default(uuid())
   name        String
-  sportType   String    @default("PICKLEBALL") // "PICKLEBALL" | "PADEL"
+  sportType   String    @default("PICKLEBALL") // "PICKLEBALL" | "SKYBALL" | "BADMINTON"
   surface     String    @default("Aesthetic Acrylic")
   hourlyRate  Float
   lighting    Boolean   @default(true)
@@ -43,6 +43,25 @@ model Booking {
   totalAmount   Float
   paymentStatus String   @default("PENDING") // "PENDING" | "PAID" | "REFUNDED"
   paymentId     String?  // Razorpay/UPI txn ID
+  
+  isPublic      Boolean  @default(false)
+  openSlots     Int      @default(0)
+  requiredSkill String?  // "Beginner" | "Intermediate" | "Advanced" | "Open to All"
+
+  paymentSplits PaymentSplit[]
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model PaymentSplit {
+  id            String   @id @default(uuid())
+  bookingId     String
+  booking       Booking  @relation(fields: [bookingId], references: [id])
+  userId        String?  // Links to registered User if they exist
+  phone         String   // Phone number of the friend
+  amount        Float
+  status        String   @default("PENDING") // "PENDING" | "PAID"
+  paymentId     String?
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
 }

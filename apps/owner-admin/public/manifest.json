@@ -1,11 +1,11 @@
 {
-  "name": "The Paddle Club, Agra",
-  "short_name": "Paddle Club",
-  "description": "Book Pickleball, Skyball, and Badminton courts and order food at Cafe Brio.",
+  "name": "Paddle Club Admin",
+  "short_name": "Admin",
+  "description": "Admin dashboard for The Paddle Club",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#0F172A",
-  "theme_color": "#0F172A",
+  "background_color": "#ffffff",
+  "theme_color": "#ffffff",
   "orientation": "portrait",
   "icons": [
     {

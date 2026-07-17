@@ -2,13 +2,53 @@
 
 import * as React from 'react';
 import { isEnabled } from '@paddle-club/feature-flags';
-import { Button, Card, CardContent } from '@paddle-club/ui';
-import { Calendar, Coffee, User, Sparkles, MessageCircleCode, ChevronRight, CheckCircle2 } from 'lucide-react';
+import { Button } from '@paddle-club/ui';
+import { Calendar, Coffee, User, Users, Sparkles, ChevronRight, CheckCircle2, Clock, LogOut, Sun, Moon } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
 
 export default function CustomerPwaDashboard() {
+  // --- THEME STATE ---
+  const [isDarkMode, setIsDarkMode] = React.useState(false);
+
+  React.useEffect(() => {
+    const savedTheme = localStorage.getItem('customer-theme');
+    const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (savedTheme === 'dark' || (!savedTheme && prefersDark)) {
+      setIsDarkMode(true);
+      document.documentElement.classList.add('dark');
+    } else {
+      document.documentElement.classList.remove('dark');
+    }
+  }, []);
+
+  const toggleTheme = () => {
+    setIsDarkMode((prev) => {
+      const next = !prev;
+      if (next) {
+        document.documentElement.classList.add('dark');
+        localStorage.setItem('customer-theme', 'dark');
+      } else {
+        document.documentElement.classList.remove('dark');
+        localStorage.setItem('customer-theme', 'light');
+      }
+      return next;
+    });
+  };
+  // -------------------
+
+  const [currentUser, setCurrentUser] = React.useState<any>(null);
+  const [isAuthLoading, setIsAuthLoading] = React.useState(true);
+  const [loginPhone, setLoginPhone] = React.useState('');
+  const [isLoggingIn, setIsLoggingIn] = React.useState(false);
+
+  // References to track previous state for notifications
+  const prevBookingsRef = React.useRef<any[]>([]);
+  const prevOrdersRef = React.useRef<any[]>([]);
+  const prevCommunityGamesRef = React.useRef<any[]>([]);
+
   const [activeTab, setActiveTab] = React.useState<'courts' | 'cafe' | 'profile'>('courts');
   const [selectedCourt, setSelectedCourt] = React.useState<string>('');
+  const [selectedSportType, setSelectedSportType] = React.useState<string>('All');
   
   // Date Carousel Logic
   const getNext7Days = () => {
@@ -24,6 +64,14 @@ export default function CustomerPwaDashboard() {
   const [selectedDate, setSelectedDate] = React.useState<string>(dateCarousel[0].toISOString().split('T')[0]);
   
   const [selectedSlot, setSelectedSlot] = React.useState<string>('');
+  
+  // Split Billing & Open Play States
+  const [isBookingModalOpen, setIsBookingModalOpen] = React.useState(false);
+  const [splitOption, setSplitOption] = React.useState<'full' | 'split' | 'open'>('full');
+  const [splitPhones, setSplitPhones] = React.useState<string[]>(['', '', '']);
+  const [openSlots, setOpenSlots] = React.useState(3);
+  const [requiredSkill, setRequiredSkill] = React.useState('Open to All');
+  const [mockCheckoutSplitId, setMockCheckoutSplitId] = React.useState<string | null>(null);
 
   // States for fetched data
   const [courtsList, setCourtsList] = React.useState<any[]>([]);
@@ -31,17 +79,27 @@ export default function CustomerPwaDashboard() {
   const [menuItems, setMenuItems] = React.useState<any[]>([]);
   const [myBookings, setMyBookings] = React.useState<any[]>([]);
   const [myOrders, setMyOrders] = React.useState<any[]>([]);
+  const [communityGames, setCommunityGames] = React.useState<any[]>([]);
 
   // UI States
   const [isLoading, setIsLoading] = React.useState(true);
   const [cart, setCart] = React.useState<Record<string, number>>({});
-  const [tableNumber, setTableNumber] = React.useState('Court A');
+  const [tableNumber, setTableNumber] = React.useState('Court');
   const [isSubmitting, setIsSubmitting] = React.useState(false);
 
   // Evaluate feature flags
   const isRestaurantEnabled = isEnabled('FEATURE_RESTAURANT_MENU_BOOKING');
   const isAiEnabled = isEnabled('FEATURE_AI_AUTOMATION');
-  const isWhatsappEnabled = isEnabled('FEATURE_WHATSAPP_AUTOMATION');
+
+  // Image Mapping for Cafe Items
+  const CAFE_IMAGES: Record<string, string> = {
+    'Iced Latte': 'https://images.unsplash.com/photo-1517701550927-30cf4ba1dba5?w=400&q=80',
+    'Hot Cappuccino': 'https://images.unsplash.com/photo-1534040385115-33dcb3acba5b?w=400&q=80',
+    'Avocado Toast': 'https://images.unsplash.com/photo-1541519227354-08fa5d50c44d?w=400&q=80',
+    'Protein Smoothie': 'https://images.unsplash.com/photo-1556881286-fc6915169721?w=400&q=80',
+    'Truffle Fries': 'https://images.unsplash.com/photo-1576107232684-1279f390859f?w=400&q=80',
+    'Seasonal Fruit Bowl': 'https://images.unsplash.com/photo-1490474418585-ba9bad8fd0ea?w=400&q=80'
+  };
 
   const slotsList = [
     '07:00 AM - 08:00 AM',
@@ -83,24 +141,68 @@ export default function CustomerPwaDashboard() {
     return now.getHours() >= hour;
   };
 
-  // Fetch initial data
+  // Fetch Auth & Initial Data
   React.useEffect(() => {
     Promise.all([
+      fetch('/api/auth/me').then(r => r.json()),
       fetch('/api/courts').then(r => r.json()),
       fetch('/api/menu').then(r => r.json())
-    ]).then(([courtsData, menuData]) => {
+    ]).then(([authData, courtsData, menuData]) => {
+      setCurrentUser(authData.user || null);
       setCourtsList(courtsData.courts || []);
       setMenuItems(menuData.menuItems || []);
       if (courtsData.courts?.length === 1) {
         setSelectedCourt(courtsData.courts[0].id);
       }
+      setIsAuthLoading(false);
       setIsLoading(false);
     }).catch(e => {
       console.error(e);
       toast.error('Failed to load initial data');
+      setIsAuthLoading(false);
       setIsLoading(false);
     });
   }, []);
+
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    const cleanPhone = loginPhone.replace(/\D/g, '');
+    if (!cleanPhone || cleanPhone.length !== 10) {
+      return toast.error('Please enter a valid 10-digit phone number');
+    }
+    
+    setIsLoggingIn(true);
+    try {
+      const res = await fetch('/api/auth/login', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ phone: cleanPhone })
+      });
+      if (res.ok) {
+        const data = await res.json();
+        setCurrentUser(data.user);
+        toast.success(`Welcome to The Paddle Club!`);
+      } else {
+        toast.error('Failed to login');
+      }
+    } catch {
+      toast.error('Network error during login');
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+
+  const handleLogout = async () => {
+    try {
+      await fetch('/api/auth/logout', { method: 'POST' });
+      setCurrentUser(null);
+      setMyBookings([]);
+      setMyOrders([]);
+      toast.success('Logged out successfully');
+    } catch {
+      toast.error('Failed to logout');
+    }
+  };
 
   // Fetch available slots
   React.useEffect(() => {
@@ -119,29 +221,82 @@ export default function CustomerPwaDashboard() {
     return () => clearInterval(interval);
   }, [selectedCourt, selectedDate]);
 
-  // Fetch Profile data
+  // Fetch Profile data (Poll continuously for notifications)
   React.useEffect(() => {
-    if (activeTab !== 'profile') return;
+    if (!currentUser) return;
 
     const fetchProfileData = () => {
       Promise.all([
         fetch('/api/bookings/my').then(r => r.json()),
-        fetch('/api/orders/my').then(r => r.json())
-      ]).then(([bookingsData, ordersData]) => {
-        setMyBookings(bookingsData.bookings || []);
-        setMyOrders(ordersData.orders || []);
+        fetch('/api/orders/my').then(r => r.json()),
+        fetch('/api/community/games').then(r => r.json())
+      ]).then(([bookingsData, ordersData, communityData]) => {
+        const newBookings = bookingsData.bookings || [];
+        const newOrders = ordersData.orders || [];
+        const newCommunityGames = communityData.games || [];
+
+        // Diff Bookings for Notifications
+        if (prevBookingsRef.current.length > 0) {
+          newBookings.forEach((newB: any) => {
+            const oldB = prevBookingsRef.current.find((b: any) => b.id === newB.id);
+            if (oldB && oldB.status !== newB.status) {
+              if (newB.status === 'CONFIRMED') {
+                toast.success(`Booking Confirmed! ${newB.court?.name} is ready for you.`);
+              } else if (newB.status === 'CANCELLED' && oldB.status === 'PENDING') {
+                toast.error(`Booking for ${newB.court?.name} was cancelled.`);
+              }
+            }
+          });
+        }
+        
+        // Diff Orders for Notifications
+        if (prevOrdersRef.current.length > 0) {
+          newOrders.forEach((newO: any) => {
+            const oldO = prevOrdersRef.current.find((o: any) => o.id === newO.id);
+            if (oldO && oldO.status !== newO.status) {
+              if (newO.status === 'COMPLETED') {
+                toast.success(`Your Cafe Brio order is ready!`, { duration: 8000 });
+              } else if (newO.status === 'PREPARING') {
+                toast.info(`Cafe Brio is now preparing your order.`);
+              } else if (newO.status === 'CANCELLED') {
+                toast.error(`Your Cafe Brio order was cancelled.`);
+              }
+            }
+          });
+        }
+
+        // Diff Community Games for Notifications
+        if (prevCommunityGamesRef.current.length > 0) {
+          newCommunityGames.forEach((newG: any) => {
+            const isNew = !prevCommunityGamesRef.current.find((g: any) => g.id === newG.id);
+            if (isNew && newG.userId !== currentUser.id) {
+              toast.success(`New Open Game! ${newG.openSlots} spots needed at ${newG.court?.name}.`, { duration: 6000 });
+            }
+          });
+        }
+
+        prevBookingsRef.current = newBookings;
+        prevOrdersRef.current = newOrders;
+        prevCommunityGamesRef.current = newCommunityGames;
+
+        setMyBookings(newBookings);
+        setMyOrders(newOrders);
+        setCommunityGames(newCommunityGames);
       }).catch(() => {});
     };
 
     fetchProfileData();
     const interval = setInterval(fetchProfileData, 5000);
     return () => clearInterval(interval);
-  }, [activeTab]);
+  }, [currentUser]);
 
-  const handleBookingSubmit = async (e: React.FormEvent) => {
+  const openBookingModal = (e: React.FormEvent) => {
     e.preventDefault();
     if (!selectedCourt || !selectedSlot) return;
+    setIsBookingModalOpen(true);
+  };
 
+  const handleConfirmAndPay = async () => {
     setIsSubmitting(true);
     const [startStr] = selectedSlot.split(' - ');
     let hour = parseInt(startStr.split(':')[0]);
@@ -154,26 +309,79 @@ export default function CustomerPwaDashboard() {
     const end = new Date(start);
     end.setHours(hour + 1, 0, 0, 0);
 
+    let validSplitPhones: string[] = [];
+    if (splitOption === 'split') {
+      const activePhones = splitPhones.filter(p => p.trim().length > 0);
+      for (const p of activePhones) {
+        const cleanPhone = p.replace(/\D/g, '');
+        if (cleanPhone.length !== 10) {
+          toast.error('All friend phone numbers must be exactly 10 digits');
+          setIsSubmitting(false);
+          return;
+        }
+        validSplitPhones.push(cleanPhone);
+      }
+    }
+
     try {
       const res = await fetch('/api/bookings', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ courtId: selectedCourt, startTime: start.toISOString(), endTime: end.toISOString() })
+        body: JSON.stringify({ 
+          courtId: selectedCourt, 
+          startTime: start.toISOString(), 
+          endTime: end.toISOString(), 
+          splitPhones: validSplitPhones,
+          isPublic: splitOption === 'open',
+          openSlots: splitOption === 'open' ? openSlots : 0,
+          requiredSkill: splitOption === 'open' ? requiredSkill : null
+        })
       });
 
       if (res.ok) {
-        toast.success('Court booked successfully! Waiting for Admin confirmation.');
+        setIsBookingModalOpen(false);
+        const data = await res.json();
+        
+        // Find user's split to pay
+        const mySplit = data.booking.paymentSplits?.find((s: any) => s.phone === currentUser.phone);
+        if (mySplit) {
+          setMockCheckoutSplitId(mySplit.id);
+        } else {
+          toast.success('Court booked successfully! Waiting for payment.');
+        }
+
         setSelectedSlot('');
         // refetch
         const availabilityRes = await fetch(`/api/bookings?courtId=${selectedCourt}&date=${selectedDate}`);
-        const data = await availabilityRes.json();
-        setBookedSlots(data.bookings || []);
+        const availData = await availabilityRes.json();
+        setBookedSlots(availData.bookings || []);
       } else {
         const err = await res.json();
         toast.error(err.error || 'Failed to book court');
       }
     } catch {
       toast.error('Network error while booking court');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const processMockPayment = async (splitId: string) => {
+    setIsSubmitting(true);
+    try {
+      const res = await fetch('/api/payments/mock-webhook', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ splitId })
+      });
+      if (res.ok) {
+        toast.success('Payment successful!');
+        setMockCheckoutSplitId(null);
+      } else {
+        toast.error('Payment failed');
+      }
+    } catch {
+      toast.error('Network error');
     } finally {
       setIsSubmitting(false);
     }
@@ -246,43 +454,110 @@ export default function CustomerPwaDashboard() {
 
   const SkeletonLoader = () => (
     <div className="space-y-6">
-      <div className="h-8 w-48 bg-slate-800 rounded animate-pulse" />
-      <div className="h-4 w-64 bg-slate-800/50 rounded animate-pulse" />
-      <div className="space-y-3 mt-6">
+      <div className="h-8 w-48 bg-slate-200 dark:bg-white/5 rounded-full animate-pulse" />
+      <div className="h-4 w-64 bg-slate-200 dark:bg-white/5 rounded-full animate-pulse" />
+      <div className="space-y-4 mt-8">
         {[1, 2, 3].map(i => (
-          <div key={i} className="h-20 w-full bg-slate-800/60 rounded-xl animate-pulse" />
+          <div key={i} className="h-24 w-full bg-slate-200 dark:bg-white/5 rounded-2xl animate-pulse" />
         ))}
       </div>
     </div>
   );
 
+  if (isAuthLoading) {
+    return (
+      <main className="min-h-screen bg-slate-50 dark:bg-[#070b14] flex items-center justify-center transition-colors duration-300">
+         <div className="w-10 h-10 border-4 border-brand-court/30 border-t-brand-court rounded-full animate-spin" />
+      </main>
+    );
+  }
+
+  if (!currentUser) {
+    return (
+      <main className="min-h-screen bg-slate-50 dark:bg-[#070b14] text-slate-900 dark:text-slate-100 flex flex-col max-w-md mx-auto relative overflow-hidden font-sans transition-colors duration-300">
+        <Toaster theme={isDarkMode ? 'dark' : 'light'} position="top-center" richColors />
+        
+        {/* Glows hidden in light mode */}
+        <div className="absolute top-[-10%] left-[-20%] w-[400px] h-[400px] rounded-full bg-brand-court/20 blur-[150px] pointer-events-none hidden dark:block" />
+        <div className="absolute bottom-[-10%] right-[-20%] w-[300px] h-[300px] rounded-full bg-brand-cafe/10 blur-[120px] pointer-events-none hidden dark:block" />
+        
+        <div className="absolute top-4 right-6 z-20">
+          <button onClick={toggleTheme} className="p-2 rounded-full bg-white dark:bg-white/5 text-slate-500 dark:text-white/50 hover:bg-slate-100 dark:hover:bg-white/10 shadow-sm dark:shadow-none transition-colors">
+            {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
+        </div>
+
+        <div className="flex-1 flex flex-col items-center justify-center px-8 z-10">
+          <div className="w-20 h-20 bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 rounded-3xl flex items-center justify-center mb-8 shadow-sm dark:shadow-[0_0_30px_rgba(0,180,216,0.2)] dark:backdrop-blur-md transition-colors duration-300">
+            <span className="text-3xl font-extrabold text-transparent bg-clip-text bg-gradient-to-br from-brand-court to-blue-400">PC</span>
+          </div>
+          
+          <h1 className="text-3xl font-light tracking-tight text-slate-900 dark:text-white mb-2 text-center">The <span className="font-semibold text-brand-court">Paddle Club</span></h1>
+          <p className="text-slate-500 dark:text-white/40 text-sm text-center mb-10">Enter your phone number to book courts and order from Cafe Brio.</p>
+
+          <form onSubmit={handleLoginSubmit} className="w-full space-y-6">
+            <div className="relative">
+              <span className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-white/40 font-semibold">+91</span>
+              <input 
+                type="tel" 
+                value={loginPhone}
+                onChange={e => {
+                  const val = e.target.value.replace(/\D/g, '').slice(0, 10);
+                  setLoginPhone(val);
+                }}
+                maxLength={10}
+                placeholder="12345 67890"
+                className="w-full bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] dark:backdrop-blur-md text-slate-900 dark:text-white px-14 py-4 rounded-2xl font-bold tracking-wider outline-none focus:border-brand-court dark:focus:border-brand-court focus:ring-4 focus:ring-brand-court/10 dark:focus:ring-brand-court/20 transition-all shadow-sm dark:shadow-none"
+                autoFocus
+              />
+            </div>
+            
+            <Button 
+              type="submit" 
+              className="w-full py-4 rounded-2xl font-bold text-sm shadow-[0_8px_20px_rgba(0,180,216,0.2)] active:scale-[0.98] transition-transform bg-brand-court hover:bg-brand-court/90 border-0 text-white"
+              disabled={isLoggingIn}
+            >
+              {isLoggingIn ? 'Verifying...' : 'Continue'}
+            </Button>
+          </form>
+        </div>
+      </main>
+    );
+  }
+
   return (
-    <main className="min-h-screen bg-brand-dark text-slate-100 flex flex-col max-w-md mx-auto border-x border-brand-dark-border shadow-2xl relative overflow-hidden pb-20">
+    <main className="min-h-screen bg-slate-50 dark:bg-[#070b14] text-slate-900 dark:text-slate-100 flex flex-col max-w-md mx-auto relative overflow-hidden pb-28 font-sans selection:bg-brand-court/30 transition-colors duration-300">
       
-      <Toaster theme="dark" position="bottom-center" richColors />
+      <Toaster theme={isDarkMode ? 'dark' : 'light'} position="top-center" richColors />
 
-      {/* Contextual Glow Backgrounds */}
-      <div className={`absolute top-0 left-0 w-full h-[500px] blur-[100px] rounded-full opacity-20 pointer-events-none transition-colors duration-700 ease-in-out ${
-        activeTab === 'courts' ? 'bg-brand-court' : activeTab === 'cafe' ? 'bg-brand-cafe' : 'bg-slate-500'
-      }`} style={{ transform: 'translateY(-30%)' }} />
+      {/* Atmospheric Soft Light Leaks (Hidden in Light Mode) */}
+      <div className="absolute top-[-10%] left-[-20%] w-[300px] h-[300px] rounded-full bg-brand-court/20 blur-[120px] pointer-events-none transition-opacity duration-1000 hidden dark:block" style={{ opacity: activeTab === 'courts' ? 1 : 0 }} />
+      <div className="absolute top-[-10%] right-[-20%] w-[300px] h-[300px] rounded-full bg-brand-cafe/20 blur-[120px] pointer-events-none transition-opacity duration-1000 hidden dark:block" style={{ opacity: activeTab === 'cafe' ? 1 : 0 }} />
+      <div className="absolute top-[20%] left-[20%] w-[200px] h-[200px] rounded-full bg-emerald-500/10 blur-[100px] pointer-events-none transition-opacity duration-1000 hidden dark:block" style={{ opacity: activeTab === 'profile' ? 1 : 0 }} />
 
-      {/* Top Navigation */}
-      <header className="px-6 py-5 bg-brand-dark-card/50 border-b border-brand-dark-border sticky top-0 backdrop-blur-xl z-10 flex items-center justify-between">
+      {/* Header */}
+      <header className="px-6 pt-12 pb-4 z-10 flex items-center justify-between">
         <div>
-          <span className="text-xl font-bold font-display text-white">THE PADDLE CLUB</span>
-          <p className="text-[10px] text-brand-court font-semibold tracking-widest uppercase">Member App</p>
+          <h1 className="text-2xl font-extrabold tracking-tight text-slate-900 dark:text-white/90">The Paddle Club</h1>
+          <p className="text-[11px] font-medium text-slate-500 dark:text-white/40 uppercase tracking-widest mt-0.5">Agra</p>
         </div>
         
-        {isAiEnabled && (
-          <div className="flex items-center space-x-1 bg-teal-950/50 border border-teal-500/30 px-2 py-1 rounded-full text-teal-300 text-[10px] font-bold shadow-[0_0_15px_rgba(45,212,191,0.2)]">
-            <Sparkles className="w-3 h-3 text-teal-400" />
-            <span>AI Booking Active</span>
-          </div>
-        )}
+        <div className="flex items-center space-x-3">
+          <button onClick={toggleTheme} className="p-2 rounded-full bg-white dark:bg-white/5 text-slate-500 dark:text-white/50 border border-slate-200 dark:border-transparent shadow-sm dark:shadow-none hover:bg-slate-100 dark:hover:bg-white/10 transition-colors">
+            {isDarkMode ? <Sun className="w-4 h-4" /> : <Moon className="w-4 h-4" />}
+          </button>
+          
+          {isAiEnabled && (
+            <div className="flex items-center space-x-1.5 bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 px-3 py-1.5 rounded-full text-slate-500 dark:text-white/60 text-[10px] font-semibold dark:backdrop-blur-md shadow-sm dark:shadow-none">
+              <Sparkles className="w-3 h-3 text-brand-court" />
+              <span className="hidden sm:inline">AI Active</span>
+            </div>
+          )}
+        </div>
       </header>
 
-      {/* Main Content Area */}
-      <div className="flex-1 p-5 overflow-y-auto z-10">
+      {/* Content Area */}
+      <div className="flex-1 px-6 overflow-y-auto z-10 scrollbar-hide">
         
         {isLoading ? (
           <SkeletonLoader />
@@ -290,17 +565,15 @@ export default function CustomerPwaDashboard() {
           <>
             {/* COURTS TAB */}
             {activeTab === 'courts' && (
-              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div>
-                  <h2 className="text-xl font-bold text-white font-display">Book a Court</h2>
-                  <p className="text-slate-400 text-xs">Reserve your pickleball or padel session</p>
+              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="pt-2">
+                  <h2 className="text-3xl font-light tracking-tight text-slate-900 dark:text-white">Reserve a <span className="font-semibold text-brand-court">Court</span></h2>
                 </div>
 
-                <form onSubmit={handleBookingSubmit} className="space-y-5">
+                <form onSubmit={openBookingModal} className="space-y-8">
                   
-                  {/* Horizontal Date Carousel */}
-                  <div className="space-y-2 -mx-5 px-5">
-                    <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Select Date</label>
+                  {/* Date Selection */}
+                  <div className="space-y-3 -mx-6 px-6">
                     <div className="flex space-x-3 overflow-x-auto pb-2 scrollbar-hide snap-x">
                       {dateCarousel.map((date, idx) => {
                         const isoString = date.toISOString().split('T')[0];
@@ -312,182 +585,196 @@ export default function CustomerPwaDashboard() {
                             key={isoString}
                             type="button"
                             onClick={() => { setSelectedDate(isoString); setSelectedSlot(''); }}
-                            className={`snap-start min-w-[70px] flex flex-col items-center justify-center py-2.5 px-3 rounded-xl border transition-all active:scale-[0.95] ${
+                            className={`snap-start min-w-[72px] flex flex-col items-center justify-center py-3 px-2 rounded-2xl transition-all duration-300 active:scale-95 ${
                               isSelected 
-                                ? 'bg-brand-court/10 border-brand-court text-brand-court shadow-[0_0_15px_rgba(0,180,216,0.15)]' 
-                                : 'bg-brand-dark-card border-brand-dark-border text-slate-400 hover:border-slate-600 hover:bg-slate-800'
+                                ? 'bg-brand-court border border-brand-court text-white shadow-[0_8px_20px_rgba(0,180,216,0.25)]' 
+                                : 'bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.05] text-slate-500 dark:text-white/40 hover:bg-slate-100 dark:hover:bg-white/[0.06] shadow-sm dark:shadow-none dark:backdrop-blur-md'
                             }`}
                           >
-                            <span className="text-[10px] font-medium uppercase tracking-wider">{day}</span>
-                            <span className={`text-lg font-bold mt-0.5 ${isSelected ? 'text-white' : 'text-slate-300'}`}>{dateNum}</span>
+                            <span className="text-[10px] font-semibold uppercase tracking-wider mb-1">{day}</span>
+                            <span className={`text-xl font-bold ${isSelected ? 'text-white' : 'text-slate-800 dark:text-white/80'}`}>{dateNum}</span>
                           </button>
                         )
                       })}
                     </div>
                   </div>
 
-                  {/* Court Selection (Only show if multiple courts) */}
-                  {courtsList.length > 1 && (
-                    <div className="space-y-2">
-                      <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Select Court</label>
-                      <div className="grid grid-cols-1 gap-2.5">
-                        {courtsList.map((court) => (
+                  {/* Sport Filter */}
+                  {courtsList.length > 0 && (
+                    <div className="flex space-x-2 -mx-6 px-6 overflow-x-auto scrollbar-hide pb-2">
+                      {['All', 'PICKLEBALL', 'SKYBALL', 'BADMINTON'].map(sport => (
+                        <button
+                          key={sport}
+                          type="button"
+                          onClick={() => { 
+                            setSelectedSportType(sport); 
+                            const filtered = courtsList.filter(c => sport === 'All' || c.sportType === sport);
+                            if (filtered.length === 1) setSelectedCourt(filtered[0].id);
+                            else setSelectedCourt('');
+                            setSelectedSlot(''); 
+                          }}
+                          className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap active:scale-95 ${
+                            selectedSportType === sport 
+                              ? 'bg-brand-court text-white shadow-md' 
+                              : 'bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/10 text-slate-500 dark:text-white/50'
+                          }`}
+                        >
+                          {sport === 'All' ? 'All Sports' : sport.charAt(0) + sport.slice(1).toLowerCase()}
+                        </button>
+                      ))}
+                    </div>
+                  )}
+
+                  {/* Multiple Courts UI (if applicable) */}
+                  {courtsList.filter(c => selectedSportType === 'All' || c.sportType === selectedSportType).length > 1 && (
+                    <div className="space-y-3">
+                      <div className="grid grid-cols-1 gap-3">
+                        {courtsList.filter(c => selectedSportType === 'All' || c.sportType === selectedSportType).map((court) => (
                           <div
                             key={court.id}
                             onClick={() => { setSelectedCourt(court.id); setSelectedSlot(''); }}
-                            className={`p-3.5 rounded-xl border-2 text-left cursor-pointer transition-all active:scale-[0.98] ${
+                            className={`p-4 rounded-2xl border cursor-pointer transition-all active:scale-[0.98] shadow-sm dark:shadow-none ${
                               selectedCourt === court.id
-                                ? 'border-brand-court bg-brand-court/10 shadow-[0_0_20px_rgba(0,180,216,0.1)]'
-                                : 'border-brand-dark-border bg-brand-dark-card hover:border-slate-700'
+                                ? 'bg-brand-court/5 dark:bg-brand-court/10 border-brand-court/50 shadow-[0_0_20px_rgba(0,180,216,0.1)]'
+                                : 'bg-white dark:bg-white/[0.03] border-slate-200 dark:border-white/[0.05] hover:bg-slate-50 dark:hover:bg-white/[0.06] dark:backdrop-blur-md'
                             }`}
                           >
                             <div className="flex justify-between items-center">
-                              <span className={`font-semibold text-sm ${selectedCourt === court.id ? 'text-white' : 'text-slate-200'}`}>{court.name}</span>
-                              <span className="text-xs text-brand-court font-bold">₹{court.hourlyRate}/hr</span>
+                              <span className={`font-semibold ${selectedCourt === court.id ? 'text-slate-900 dark:text-white' : 'text-slate-600 dark:text-white/80'}`}>{court.name}</span>
+                              <span className="text-sm text-brand-court font-bold">₹{court.hourlyRate}/hr</span>
                             </div>
-                            <span className="text-[10px] text-slate-400 block mt-1">{court.sportType} Court · {court.surface}</span>
+                            <span className="text-[11px] text-slate-400 dark:text-white/40 block mt-1 font-medium">{court.sportType} · {court.surface}</span>
                           </div>
                         ))}
                       </div>
                     </div>
                   )}
 
-                  {/* Single Court Display */}
-                  {courtsList.length === 1 && (
-                    <div className="p-3.5 rounded-xl border-2 border-brand-court bg-brand-court/10 shadow-[0_0_20px_rgba(0,180,216,0.1)]">
-                      <div className="flex justify-between items-center">
-                        <span className="font-semibold text-sm text-white">{courtsList[0].name}</span>
-                        <span className="text-xs text-brand-court font-bold">₹{courtsList[0].hourlyRate}/hr</span>
+                  {/* Single Court Header (Premium look) */}
+                  {courtsList.filter(c => selectedSportType === 'All' || c.sportType === selectedSportType).length === 1 && (
+                    <div className="flex items-end justify-between border-b border-slate-200 dark:border-white/10 pb-4">
+                      <div>
+                        <span className="text-[10px] font-bold text-slate-400 dark:text-white/40 uppercase tracking-widest block mb-1">Selected Court</span>
+                        <span className="font-semibold text-lg text-slate-900 dark:text-white/90">{courtsList.filter(c => selectedSportType === 'All' || c.sportType === selectedSportType)[0].name}</span>
                       </div>
-                      <span className="text-[10px] text-slate-400 block mt-1">{courtsList[0].sportType} Court · {courtsList[0].surface}</span>
+                      <span className="text-sm font-bold text-brand-court bg-brand-court/10 px-3 py-1 rounded-full">₹{courtsList.filter(c => selectedSportType === 'All' || c.sportType === selectedSportType)[0].hourlyRate}/hr</span>
                     </div>
                   )}
 
-                  {/* Time Slot Selection */}
-                  <div className="space-y-2">
-                    <div className="flex justify-between items-center">
-                      <label className="text-xs font-semibold text-slate-400 uppercase tracking-wider">Select Time Slot</label>
-                      {selectedCourt && <span className="text-[10px] text-brand-court animate-pulse">Loading availability...</span>}
+                  {/* Time Slots */}
+                  <div className="space-y-4">
+                    <div className="flex items-center space-x-2">
+                      <Clock className="w-4 h-4 text-slate-400 dark:text-white/40" />
+                      <span className="text-xs font-semibold text-slate-500 dark:text-white/60 tracking-wide">Available Slots</span>
                     </div>
                     
-                    <div className="grid grid-cols-2 gap-2">
+                    <div className="grid grid-cols-2 gap-3">
                       {slotsList.map((slot) => {
                         const isBooked = isSlotBooked(slot);
                         const isPassed = isSlotPassed(slot);
                         const isDisabled = isBooked || isPassed || !selectedCourt;
-                        
+
                         return (
                           <button
                             key={slot}
                             type="button"
                             disabled={isDisabled}
                             onClick={() => setSelectedSlot(slot)}
-                            className={`p-3 rounded-xl border text-xs text-center font-medium transition-all active:scale-[0.97] ${
-                              !selectedCourt ? 'opacity-50 cursor-not-allowed bg-brand-dark-card border-brand-dark-border text-slate-600' :
-                              isPassed ? 'opacity-40 bg-slate-900 border-slate-800 text-slate-600 cursor-not-allowed line-through' :
-                              isBooked ? 'bg-slate-900/80 border-slate-800 text-slate-600 cursor-not-allowed' :
+                            className={`p-3.5 rounded-2xl border text-xs text-center font-semibold transition-all duration-300 active:scale-[0.96] flex flex-col items-center justify-center space-y-1 shadow-sm dark:shadow-none ${
+                              !selectedCourt ? 'opacity-30 cursor-not-allowed bg-slate-50 dark:bg-white/[0.02] border-slate-200 dark:border-white/[0.05] text-slate-400 dark:text-white/40' :
+                              isPassed ? 'opacity-30 bg-slate-100 dark:bg-white/[0.01] border-slate-200 dark:border-white/[0.02] text-slate-400 dark:text-white/40 cursor-not-allowed line-through' :
+                              isBooked ? 'bg-slate-100 dark:bg-white/[0.02] border-slate-200 dark:border-white/[0.02] text-slate-400 dark:text-white/20 cursor-not-allowed' :
                               selectedSlot === slot
-                                ? 'bg-brand-court border-brand-court text-white shadow-[0_0_15px_rgba(0,180,216,0.3)]'
-                                : 'bg-brand-dark-card border-brand-dark-border text-slate-300 hover:border-slate-600 hover:bg-slate-800'
+                                ? 'bg-brand-court border-brand-court text-white shadow-[0_4px_15px_rgba(0,180,216,0.3)]'
+                                : 'bg-white dark:bg-white/[0.04] border-slate-200 dark:border-white/[0.08] text-slate-700 dark:text-white/70 hover:bg-slate-50 dark:hover:bg-white/[0.08] dark:backdrop-blur-md'
                             }`}
                           >
-                            {slot} 
-                            {isPassed ? <span className="block text-[9px] mt-0.5 opacity-60">Lapsed</span> : isBooked ? <span className="block text-[9px] mt-0.5 opacity-60">Booked</span> : ''}
+                            <span>{slot.split(' - ')[0]}</span>
+                            {isBooked && !isPassed && <span className="text-[8px] font-bold uppercase tracking-widest text-slate-400 dark:text-white/30">Booked</span>}
                           </button>
                         )
                       })}
                     </div>
                   </div>
 
-                  <Button 
-                    type="submit" 
-                    variant="primary" 
-                    className="w-full py-3.5 mt-6 rounded-xl font-bold shadow-lg shadow-brand-court/20 active:scale-[0.98] transition-transform" 
-                    disabled={!selectedCourt || !selectedSlot || isSubmitting}
-                  >
-                    {isSubmitting ? 'Confirming...' : 'Confirm Booking'}
-                  </Button>
+                  <div className="pt-4">
+                    <Button 
+                      type="submit" 
+                      variant="primary" 
+                      className="w-full py-4 rounded-2xl font-bold text-sm shadow-[0_8px_20px_rgba(0,180,216,0.2)] active:scale-[0.98] transition-transform bg-brand-court hover:bg-brand-court/90 border-0" 
+                      disabled={!selectedCourt || !selectedSlot || isSubmitting}
+                    >
+                      {isSubmitting ? 'Confirming...' : 'Book Court'}
+                    </Button>
+                  </div>
                 </form>
               </div>
             )}
 
             {/* CAFE TAB */}
             {activeTab === 'cafe' && (
-              <div className="space-y-6 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div>
-                  <h2 className="text-xl font-bold text-white font-display">Cafe Brio Order</h2>
-                  <p className="text-slate-400 text-xs">Fresh, chef-curated plates served to your table or court</p>
+              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="pt-2">
+                  <h2 className="text-3xl font-light tracking-tight text-slate-900 dark:text-white">Cafe <span className="font-semibold text-brand-cafe">Brio</span></h2>
                 </div>
 
                 {!isRestaurantEnabled ? (
-                  <div className="p-8 text-center bg-slate-900/50 rounded-2xl border border-slate-800">
-                    <Coffee className="w-10 h-10 mx-auto text-slate-600 mb-3" />
-                    <h3 className="font-semibold text-slate-300 text-sm">Cafe Booking Offline</h3>
-                    <p className="text-xs text-slate-500 mt-1">Cafe Brio digital menu ordering is currently disabled by the club administrator.</p>
+                  <div className="p-10 text-center bg-white dark:bg-white/[0.02] rounded-3xl border border-slate-200 dark:border-white/[0.05] dark:backdrop-blur-md shadow-sm dark:shadow-none">
+                    <Coffee className="w-12 h-12 mx-auto text-slate-300 dark:text-white/20 mb-4" />
+                    <h3 className="font-medium text-slate-700 dark:text-white/80">Cafe Offline</h3>
+                    <p className="text-sm text-slate-400 dark:text-white/40 mt-2">Digital ordering is currently unavailable.</p>
                   </div>
                 ) : (
-                  <div className="space-y-5">
+                  <div className="space-y-8">
                     
-                    <div className="p-4 bg-brand-cafe/10 border border-brand-cafe/20 rounded-xl text-xs text-brand-cafe font-medium flex justify-between items-center shadow-inner">
-                      <div className="flex items-center space-x-2">
-                        <Coffee className="w-4 h-4" />
-                        <span>Deliver to:</span>
-                      </div>
+                    {/* Delivery Input */}
+                    <div className="p-4 bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] dark:backdrop-blur-md rounded-2xl flex justify-between items-center shadow-sm dark:shadow-none">
+                      <span className="text-xs font-semibold text-slate-500 dark:text-white/50 tracking-wide">DELIVER TO</span>
                       <input 
                         type="text" 
                         value={tableNumber} 
                         onChange={e => setTableNumber(e.target.value)} 
-                        className="bg-transparent border-b border-brand-cafe/50 text-right text-white font-bold outline-none focus:border-brand-cafe transition-colors w-32 placeholder-slate-500"
-                        placeholder="e.g. Table 5 / Court A"
+                        className="bg-transparent text-right text-brand-cafe font-semibold outline-none w-32 placeholder-slate-300 dark:placeholder-white/20 text-sm"
+                        placeholder="Court / Table"
                       />
                     </div>
 
-                    {/* Combo Offers Section */}
-                    <div className="py-2">
-                      <h3 className="text-sm font-bold text-white flex items-center space-x-2 mb-3">
-                        <Sparkles className="w-4 h-4 text-amber-400" />
-                        <span>Today's Combos</span>
-                      </h3>
-                      <div className="flex space-x-4 overflow-x-auto pb-4 scrollbar-hide snap-x">
+                    {/* Combo Offers */}
+                    <div className="-mx-6 px-6">
+                      <div className="flex space-x-4 overflow-x-auto pb-6 scrollbar-hide snap-x">
                         
-                        {/* Combo Card 1 */}
-                        <div className="snap-start min-w-[220px] p-4 rounded-2xl bg-gradient-to-br from-amber-500/10 to-orange-600/20 border border-amber-500/30 relative overflow-hidden shadow-lg">
-                          <div className="absolute -right-4 -top-4 w-16 h-16 bg-amber-500/20 rounded-full blur-xl" />
-                          <h4 className="font-bold text-amber-300 text-sm mb-0.5 tracking-tight">Post-Match Refuel</h4>
-                          <p className="text-[10px] text-slate-300 mb-3">Avocado Toast + Brio Latte</p>
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <span className="font-bold text-white text-sm">₹460</span>
-                            </div>
+                        <div className="snap-start min-w-[260px] p-5 rounded-3xl bg-gradient-to-br from-amber-50 to-amber-100 dark:from-[#1a130a] dark:to-[#261608] border border-amber-200 dark:border-brand-cafe/20 relative overflow-hidden shadow-md dark:shadow-xl">
+                          <div className="absolute -right-10 -top-10 w-32 h-32 bg-brand-cafe/20 rounded-full blur-3xl hidden dark:block" />
+                          <h4 className="font-bold text-amber-900 dark:text-brand-cafe text-base mb-1 tracking-tight">Post-Match Refuel</h4>
+                          <p className="text-xs text-amber-700/70 dark:text-white/50 mb-5 font-medium">Avocado Toast + Brio Latte</p>
+                          <div className="flex justify-between items-end relative z-10">
+                            <span className="font-bold text-amber-950 dark:text-white text-lg">₹460</span>
                             <button onClick={() => {
                               const toastItem = menuItems.find(i => i.name.includes('Avocado'));
                               const latteItem = menuItems.find(i => i.name.includes('Latte'));
                               if (toastItem) addToCart(toastItem.id);
                               if (latteItem) addToCart(latteItem.id);
                               if (toastItem || latteItem) toast.success('Added Combo to cart!');
-                            }} className="bg-amber-500 text-amber-950 text-[10px] font-bold px-3 py-1.5 rounded-lg active:scale-95 transition-transform shadow-[0_0_10px_rgba(245,158,11,0.3)] hover:bg-amber-400">
-                              Add Combo
+                            }} className="bg-amber-900 dark:bg-brand-cafe text-white dark:text-black text-xs font-bold px-4 py-2 rounded-xl active:scale-95 transition-transform">
+                              Add
                             </button>
                           </div>
                         </div>
 
-                        {/* Combo Card 2 */}
-                        <div className="snap-start min-w-[220px] p-4 rounded-2xl bg-gradient-to-br from-emerald-500/10 to-teal-600/20 border border-emerald-500/30 relative overflow-hidden shadow-lg">
-                          <div className="absolute -right-4 -top-4 w-16 h-16 bg-emerald-500/20 rounded-full blur-xl" />
-                          <h4 className="font-bold text-emerald-300 text-sm mb-0.5 tracking-tight">Doubles Special</h4>
-                          <p className="text-[10px] text-slate-300 mb-3">2x Truffle Fries + 2x Lattes</p>
-                          <div className="flex justify-between items-center">
-                            <div>
-                              <span className="font-bold text-white text-sm">₹800</span>
-                            </div>
+                        <div className="snap-start min-w-[260px] p-5 rounded-3xl bg-gradient-to-br from-emerald-50 to-emerald-100 dark:from-[#0a1a14] dark:to-[#08261e] border border-emerald-200 dark:border-emerald-500/20 relative overflow-hidden shadow-md dark:shadow-xl">
+                          <div className="absolute -right-10 -top-10 w-32 h-32 bg-emerald-500/20 rounded-full blur-3xl hidden dark:block" />
+                          <h4 className="font-bold text-emerald-900 dark:text-emerald-400 text-base mb-1 tracking-tight">Doubles Special</h4>
+                          <p className="text-xs text-emerald-700/70 dark:text-white/50 mb-5 font-medium">2x Truffle Fries + 2x Lattes</p>
+                          <div className="flex justify-between items-end relative z-10">
+                            <span className="font-bold text-emerald-950 dark:text-white text-lg">₹800</span>
                             <button onClick={() => {
                               const friesItem = menuItems.find(i => i.name.includes('Fries'));
                               const latteItem = menuItems.find(i => i.name.includes('Latte'));
                               if (friesItem) { addToCart(friesItem.id); addToCart(friesItem.id); }
                               if (latteItem) { addToCart(latteItem.id); addToCart(latteItem.id); }
                               if (friesItem || latteItem) toast.success('Added Doubles Combo!');
-                            }} className="bg-emerald-500 text-emerald-950 text-[10px] font-bold px-3 py-1.5 rounded-lg active:scale-95 transition-transform shadow-[0_0_10px_rgba(16,185,129,0.3)] hover:bg-emerald-400">
-                              Add Combo
+                            }} className="bg-emerald-900 dark:bg-emerald-500 text-white dark:text-black text-xs font-bold px-4 py-2 rounded-xl active:scale-95 transition-transform">
+                              Add
                             </button>
                           </div>
                         </div>
@@ -495,32 +782,40 @@ export default function CustomerPwaDashboard() {
                       </div>
                     </div>
 
-                    <h3 className="text-sm font-bold text-white flex items-center space-x-2 mt-2 mb-2">
-                      <Coffee className="w-4 h-4 text-brand-cafe" />
-                      <span>All Menu Items</span>
-                    </h3>
-                    <div className="space-y-3">
+                    {/* Menu Items */}
+                    <div className="space-y-4">
+                      <span className="text-[10px] font-bold text-slate-400 dark:text-white/40 uppercase tracking-widest block mb-2">A La Carte</span>
                       {menuItems.map((item) => (
-                        <div key={item.id} className="flex justify-between items-center p-4 bg-brand-dark-card border border-brand-dark-border rounded-xl hover:border-slate-700 transition-colors">
-                          <div>
-                            <span className="font-semibold text-sm block text-slate-200">{item.name}</span>
-                            <span className="text-[10px] text-slate-400 bg-slate-800 px-1.5 py-0.5 rounded mt-1 inline-block">{item.category}</span>
+                        <div key={item.id} className="flex justify-between items-center p-3 bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.04] rounded-2xl dark:backdrop-blur-md shadow-sm dark:shadow-none">
+                          <div className="flex items-center space-x-4">
+                            <div className="w-16 h-16 shrink-0 bg-slate-100 dark:bg-white/5 rounded-xl overflow-hidden border border-slate-200 dark:border-white/10">
+                              <img 
+                                src={CAFE_IMAGES[item.name] || 'https://images.unsplash.com/photo-1495147466023-ac5c588e2e94?w=400&q=80'} 
+                                alt={item.name} 
+                                className="w-full h-full object-cover"
+                                loading="lazy"
+                              />
+                            </div>
+                            <div>
+                              <span className="font-semibold text-sm block text-slate-900 dark:text-white/90">{item.name}</span>
+                              <span className="text-[10px] font-medium text-slate-500 dark:text-white/40 mt-1 block">{item.category}</span>
+                            </div>
                           </div>
-                          <div className="flex flex-col items-end space-y-2">
-                            <span className="text-sm font-bold text-brand-cafe">₹{item.price}</span>
+                          <div className="flex flex-col items-end justify-center space-y-2">
+                            <span className="text-sm font-semibold text-brand-cafe">₹{item.price}</span>
                             
                             {cart[item.id] ? (
-                              <div className="flex items-center space-x-3 bg-brand-cafe/20 border border-brand-cafe/30 rounded-lg px-1.5 py-1">
-                                <button onClick={() => removeFromCart(item.id)} className="text-brand-cafe hover:text-white px-2 active:scale-90 font-bold">-</button>
-                                <span className="text-xs font-bold w-4 text-center text-white">{cart[item.id]}</span>
-                                <button onClick={() => addToCart(item.id)} className="text-brand-cafe hover:text-white px-2 active:scale-90 font-bold">+</button>
+                              <div className="flex items-center bg-slate-100 dark:bg-white/[0.08] rounded-full px-1 py-0.5 border border-slate-200 dark:border-white/10">
+                                <button onClick={() => removeFromCart(item.id)} className="text-slate-600 dark:text-white/60 hover:text-slate-900 dark:hover:text-white px-2.5 active:scale-90 font-medium">-</button>
+                                <span className="text-xs font-bold w-4 text-center text-slate-900 dark:text-white">{cart[item.id]}</span>
+                                <button onClick={() => addToCart(item.id)} className="text-slate-600 dark:text-white/60 hover:text-slate-900 dark:hover:text-white px-2.5 active:scale-90 font-medium">+</button>
                               </div>
                             ) : (
                               <button 
                                 onClick={() => addToCart(item.id)}
-                                className="text-[10px] font-bold uppercase tracking-wider bg-slate-800 text-slate-300 hover:text-white px-4 py-1.5 rounded-lg active:scale-95 transition-transform"
+                                className="w-7 h-7 rounded-full bg-slate-100 dark:bg-white/[0.08] hover:bg-slate-200 dark:hover:bg-white/[0.15] border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-600 dark:text-white active:scale-90 transition-all"
                               >
-                                Add
+                                <span className="text-lg leading-none mb-0.5">+</span>
                               </button>
                             )}
                           </div>
@@ -529,18 +824,15 @@ export default function CustomerPwaDashboard() {
                     </div>
 
                     {cartTotal > 0 && (
-                      <div className="sticky bottom-[70px] z-20 animate-in slide-in-from-bottom-8">
+                      <div className="sticky bottom-4 z-20 pt-4">
                         <Button 
                           variant="secondary" 
-                          className="w-full py-4 rounded-xl font-bold shadow-[0_10px_30px_rgba(217,160,91,0.2)] active:scale-[0.98] transition-transform flex justify-between items-center px-6" 
+                          className="w-full py-4 rounded-2xl font-bold text-sm shadow-[0_8px_30px_rgba(217,160,91,0.2)] active:scale-[0.98] transition-transform bg-brand-cafe hover:bg-brand-cafe/90 text-white dark:text-black border-0 flex justify-between items-center px-6" 
                           onClick={handleOrderSubmit}
                           disabled={isSubmitting}
                         >
-                          <span>{isSubmitting ? 'Placing Order...' : 'Place Cafe Order'}</span>
-                          <div className="flex items-center space-x-2">
-                            <span className="bg-brand-cafe-dark/50 px-2 py-1 rounded-md text-white text-xs">₹{cartTotal}</span>
-                            <ChevronRight className="w-4 h-4" />
-                          </div>
+                          <span>{isSubmitting ? 'Placing Order...' : 'Place Order'}</span>
+                          <span className="font-extrabold">₹{cartTotal}</span>
                         </Button>
                       </div>
                     )}
@@ -552,104 +844,54 @@ export default function CustomerPwaDashboard() {
             {/* PROFILE TAB */}
             {activeTab === 'profile' && (
               <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
-                <div>
-                  <h2 className="text-xl font-bold text-white font-display">My Account</h2>
+                <div className="pt-2">
+                  <h2 className="text-3xl font-light tracking-tight text-slate-900 dark:text-white">Your <span className="font-semibold text-brand-court">Profile</span></h2>
                 </div>
 
-                <Card className="bg-brand-dark-card/60 backdrop-blur-md border-slate-800">
-                  <CardContent className="pt-6">
-                    <div className="flex items-center space-x-4">
-                      <div className="w-14 h-14 bg-gradient-to-br from-brand-court to-teal-700 rounded-full flex items-center justify-center font-bold text-xl text-white shadow-lg">
-                        T
-                      </div>
-                      <div>
-                        <span className="font-bold text-lg block text-white">Test Player</span>
-                        <span className="text-xs text-slate-400 font-medium tracking-wide">+91 12345 67890</span>
-                      </div>
+                <div className="p-6 bg-white dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.06] dark:backdrop-blur-md rounded-3xl flex items-center justify-between shadow-sm dark:shadow-lg transition-colors">
+                  <div className="flex items-center space-x-5">
+                    <div className="w-16 h-16 bg-gradient-to-br from-brand-court to-blue-600 rounded-full flex items-center justify-center font-bold text-2xl text-white shadow-[0_0_20px_rgba(0,180,216,0.3)] uppercase">
+                      {currentUser?.name?.charAt(0) || 'U'}
                     </div>
-                  </CardContent>
-                </Card>
+                    <div>
+                      <span className="font-bold text-xl block text-slate-900 dark:text-white/90 tracking-tight">{currentUser?.name || 'Player'}</span>
+                      <span className="text-xs text-slate-500 dark:text-white/50 font-medium tracking-wide mt-1 block">{currentUser?.phone}</span>
+                    </div>
+                  </div>
+                  <button onClick={handleLogout} className="p-3 bg-slate-50 dark:bg-white/[0.05] hover:bg-red-50 dark:hover:bg-red-500/10 border border-slate-200 dark:border-white/10 hover:border-red-200 dark:hover:border-red-500/30 rounded-full text-slate-400 dark:text-white/40 hover:text-red-500 dark:hover:text-red-400 transition-all active:scale-90">
+                    <LogOut className="w-5 h-5" />
+                  </button>
+                </div>
 
                 {/* Bookings Section */}
-                <div>
-                  <h3 className="font-bold text-sm text-slate-200 mb-3 flex items-center space-x-2">
-                    <Calendar className="w-4 h-4 text-brand-court" />
-                    <span>Recent Bookings</span>
-                  </h3>
+                <div className="space-y-4">
+                  <span className="text-[10px] font-bold text-slate-400 dark:text-white/40 uppercase tracking-widest block">Activity</span>
                   
                   {myBookings.length === 0 ? (
-                    <div className="border border-dashed border-slate-800 rounded-xl p-6 text-center">
-                      <div className="bg-slate-900/50 w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <Calendar className="w-5 h-5 text-slate-600" />
-                      </div>
-                      <p className="text-sm font-semibold text-slate-300">No courts booked yet</p>
-                      <p className="text-xs text-slate-500 mt-1">Ready for a match? Head over to the courts tab.</p>
-                      <button onClick={() => setActiveTab('courts')} className="mt-4 text-xs font-bold text-brand-court hover:underline">Book a Court</button>
+                    <div className="border border-dashed border-slate-200 dark:border-white/10 rounded-2xl p-8 text-center bg-slate-50 dark:bg-white/[0.01]">
+                      <Calendar className="w-8 h-8 text-slate-300 dark:text-white/20 mx-auto mb-3" />
+                      <p className="text-sm font-medium text-slate-500 dark:text-white/60">No courts booked yet</p>
                     </div>
                   ) : (
                     <div className="space-y-3">
                       {myBookings.map(b => (
-                        <div key={b.id} className="p-4 bg-brand-dark-card rounded-xl text-xs flex justify-between border border-brand-dark-border hover:border-slate-700 transition-colors">
-                          <div className="space-y-1">
-                            <p className="font-bold text-sm text-white">{b.court.name}</p>
-                            <p className="text-slate-400 flex items-center space-x-1">
-                              <span>{new Date(b.startTime).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
-                              <span>·</span>
-                              <span>{new Date(b.startTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}</span>
+                        <div key={b.id} className="p-4 bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] rounded-2xl dark:backdrop-blur-md flex justify-between items-center shadow-sm dark:shadow-none">
+                          <div>
+                            <p className="font-semibold text-sm text-slate-900 dark:text-white/90">{b.court.name}</p>
+                            <p className="text-slate-500 dark:text-white/50 text-xs mt-1 font-medium">
+                              {new Date(b.startTime).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })} · {new Date(b.startTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
                             </p>
                           </div>
-                          <div className="text-right flex flex-col items-end justify-between">
-                            <span className={`font-bold px-2 py-0.5 rounded-full text-[10px] ${
-                              b.status === 'CONFIRMED' ? 'bg-emerald-950/50 text-emerald-400' : 
-                              b.status === 'CANCELLED' ? 'bg-red-950/50 text-red-400' : 'bg-amber-950/50 text-amber-400'
+                          <div className="flex flex-col items-end space-y-2">
+                            <span className={`font-bold px-3 py-1 rounded-full text-[10px] ${
+                              b.status === 'CONFIRMED' ? 'bg-emerald-50 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/20' : 
+                              b.status === 'CANCELLED' ? 'bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 border border-red-200 dark:border-red-500/20' : 'bg-amber-50 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-200 dark:border-amber-500/20'
                             }`}>
                               {b.status}
                             </span>
                             {b.status === 'PENDING' && (
-                              <button onClick={() => handleCancelBooking(b.id)} className="text-[10px] font-bold text-slate-500 hover:text-red-400 transition-colors mt-2 underline">Cancel</button>
+                              <button onClick={() => handleCancelBooking(b.id)} className="text-[10px] font-bold text-slate-400 dark:text-white/30 hover:text-red-500 dark:hover:text-red-400 transition-colors">Cancel</button>
                             )}
-                          </div>
-                        </div>
-                      ))}
-                    </div>
-                  )}
-                </div>
-
-                {/* Orders Section */}
-                <div>
-                  <h3 className="font-bold text-sm text-slate-200 mb-3 flex items-center space-x-2">
-                    <Coffee className="w-4 h-4 text-brand-cafe" />
-                    <span>Recent Cafe Orders</span>
-                  </h3>
-                  
-                  {myOrders.length === 0 ? (
-                    <div className="border border-dashed border-slate-800 rounded-xl p-6 text-center">
-                      <div className="bg-slate-900/50 w-10 h-10 rounded-full flex items-center justify-center mx-auto mb-3">
-                        <Coffee className="w-5 h-5 text-slate-600" />
-                      </div>
-                      <p className="text-sm font-semibold text-slate-300">No orders placed</p>
-                      <p className="text-xs text-slate-500 mt-1">Grab a coffee or snack after your game.</p>
-                      <button onClick={() => setActiveTab('cafe')} className="mt-4 text-xs font-bold text-brand-cafe hover:underline">View Menu</button>
-                    </div>
-                  ) : (
-                    <div className="space-y-3">
-                      {myOrders.map(o => (
-                        <div key={o.id} className="p-4 bg-brand-dark-card rounded-xl text-xs flex justify-between border border-brand-dark-border hover:border-slate-700 transition-colors">
-                          <div className="space-y-1">
-                            <p className="font-bold text-sm text-white flex items-center space-x-2">
-                              <span>₹{o.totalAmount}</span>
-                              <span className="text-[10px] text-slate-500 font-normal">to {o.tableNumber}</span>
-                            </p>
-                            <p className="text-slate-400 text-[10px]">{new Date(o.createdAt).toLocaleString()}</p>
-                          </div>
-                          <div className="text-right">
-                            <span className={`font-bold px-2 py-0.5 rounded-full text-[10px] flex items-center space-x-1 ${
-                              o.status === 'COMPLETED' ? 'bg-emerald-950/50 text-emerald-400' : 
-                              o.status === 'CANCELLED' ? 'bg-red-950/50 text-red-400' : 'bg-blue-950/50 text-blue-400'
-                            }`}>
-                              {o.status === 'COMPLETED' && <CheckCircle2 className="w-3 h-3" />}
-                              <span>{o.status}</span>
-                            </span>
                           </div>
                         </div>
                       ))}
@@ -659,31 +901,250 @@ export default function CustomerPwaDashboard() {
 
               </div>
             )}
+
+            {/* COMMUNITY TAB */}
+            {activeTab === 'community' && (
+              <div className="space-y-8 animate-in fade-in slide-in-from-bottom-4 duration-500">
+                <div className="pt-2">
+                  <h2 className="text-3xl font-light tracking-tight text-slate-900 dark:text-white">Open <span className="font-semibold text-brand-court">Play</span></h2>
+                  <p className="text-sm text-slate-500 dark:text-white/50 mt-1">Join a public game and split the cost.</p>
+                </div>
+
+                <div className="space-y-4">
+                  {communityGames.length === 0 ? (
+                    <div className="border border-dashed border-slate-200 dark:border-white/10 rounded-2xl p-8 text-center bg-slate-50 dark:bg-white/[0.01]">
+                      <User className="w-8 h-8 text-slate-300 dark:text-white/20 mx-auto mb-3" />
+                      <p className="text-sm font-medium text-slate-500 dark:text-white/60">No open games available right now.</p>
+                    </div>
+                  ) : (
+                    communityGames.map(game => (
+                      <div key={game.id} className="p-5 bg-white dark:bg-white/[0.02] border border-slate-200 dark:border-white/[0.05] rounded-2xl dark:backdrop-blur-md shadow-sm dark:shadow-none space-y-4">
+                        <div className="flex justify-between items-start">
+                          <div>
+                            <span className="font-bold text-sm text-slate-900 dark:text-white/90 block">{game.court.name}</span>
+                            <span className="text-xs text-slate-500 dark:text-white/50 mt-0.5 block">
+                              {new Date(game.startTime).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })} · {new Date(game.startTime).toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' })}
+                            </span>
+                          </div>
+                          <span className="bg-brand-court/10 text-brand-court font-bold text-[10px] px-2 py-1 rounded-md uppercase tracking-wider">
+                            {game.openSlots} Spots Left
+                          </span>
+                        </div>
+                        
+                        <div className="flex items-center space-x-2 text-xs">
+                          <div className="w-6 h-6 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center font-bold text-slate-500 dark:text-white/50">{game.user.name.charAt(0)}</div>
+                          <span className="text-slate-600 dark:text-white/70 font-medium">Host: {game.user.name}</span>
+                          <span className="text-slate-300 dark:text-white/20 px-1">•</span>
+                          <span className="text-slate-500 dark:text-white/50 font-medium">Level: {game.requiredSkill || 'Open to All'}</span>
+                        </div>
+
+                        <div className="pt-2 border-t border-slate-100 dark:border-white/5 flex justify-between items-center">
+                          <span className="font-extrabold text-sm text-slate-900 dark:text-white/90">₹{game.totalAmount / 4} <span className="text-[10px] font-medium text-slate-500 dark:text-white/40">/person</span></span>
+                          <Button 
+                            onClick={async () => {
+                              try {
+                                setIsSubmitting(true);
+                                const res = await fetch('/api/community/join', {
+                                  method: 'POST',
+                                  headers: { 'Content-Type': 'application/json' },
+                                  body: JSON.stringify({ bookingId: game.id })
+                                });
+                                if (res.ok) {
+                                  const data = await res.json();
+                                  setMockCheckoutSplitId(data.split.id);
+                                } else {
+                                  const err = await res.json();
+                                  toast.error(err.error || 'Failed to join game');
+                                }
+                              } catch {
+                                toast.error('Network error');
+                              } finally {
+                                setIsSubmitting(false);
+                              }
+                            }}
+                            className="bg-brand-court text-white px-4 py-2 rounded-lg text-xs font-bold active:scale-95 transition-transform"
+                            disabled={isSubmitting}
+                          >
+                            Join Game
+                          </Button>
+                        </div>
+                      </div>
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
           </>
         )}
       </div>
 
-      {/* PWA Bottom Navigation Bar */}
-      <footer className="fixed bottom-0 left-0 right-0 max-w-md mx-auto bg-slate-900/90 backdrop-blur-xl border-t border-slate-800 flex justify-around items-center py-3 z-30 shadow-[0_-10px_40px_rgba(0,0,0,0.5)]">
-        <button 
-          onClick={() => setActiveTab('courts')} 
-          className={`flex flex-col items-center space-y-1 text-[10px] font-bold transition-all active:scale-95 ${activeTab === 'courts' ? 'text-brand-court scale-105' : 'text-slate-500 hover:text-slate-300'}`}
-        >
-          <Calendar className="w-5 h-5" /><span>Courts</span>
-        </button>
-        <button 
-          onClick={() => setActiveTab('cafe')} 
-          className={`flex flex-col items-center space-y-1 text-[10px] font-bold transition-all active:scale-95 ${activeTab === 'cafe' ? 'text-brand-cafe scale-105' : 'text-slate-500 hover:text-slate-300'}`}
-        >
-          <Coffee className="w-5 h-5" /><span>Cafe Brio</span>
-        </button>
-        <button 
-          onClick={() => setActiveTab('profile')} 
-          className={`flex flex-col items-center space-y-1 text-[10px] font-bold transition-all active:scale-95 ${activeTab === 'profile' ? 'text-brand-court scale-105' : 'text-slate-500 hover:text-slate-300'}`}
-        >
-          <User className="w-5 h-5" /><span>Profile</span>
-        </button>
-      </footer>
+      {/* Split Billing Modal */}
+      {isBookingModalOpen && (
+        <div className="fixed inset-0 z-50 flex items-end justify-center bg-black/60 backdrop-blur-sm sm:items-center">
+          <div className="w-full max-w-md bg-white dark:bg-[#0f1523] rounded-t-3xl sm:rounded-3xl p-6 shadow-2xl border border-slate-200 dark:border-white/10 animate-in slide-in-from-bottom-full sm:slide-in-from-bottom-0 sm:fade-in duration-300">
+            <h3 className="text-xl font-extrabold text-slate-900 dark:text-white mb-2">Complete Booking</h3>
+            <p className="text-sm text-slate-500 dark:text-white/60 mb-6">Court Fee: ₹800/hr</p>
+            
+            <div className="flex bg-slate-100 dark:bg-white/5 p-1 rounded-xl mb-6">
+              <button 
+                type="button"
+                onClick={() => setSplitOption('full')} 
+                className={`flex-1 py-2.5 rounded-lg text-[11px] font-bold transition-all ${splitOption === 'full' ? 'bg-white dark:bg-brand-court text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-white/40'}`}
+              >
+                Pay Full
+              </button>
+              <button 
+                type="button"
+                onClick={() => setSplitOption('split')} 
+                className={`flex-1 py-2.5 rounded-lg text-[11px] font-bold transition-all ${splitOption === 'split' ? 'bg-white dark:bg-brand-court text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-white/40'}`}
+              >
+                Split Friends
+              </button>
+              <button 
+                type="button"
+                onClick={() => setSplitOption('open')} 
+                className={`flex-1 py-2.5 rounded-lg text-[11px] font-bold transition-all ${splitOption === 'open' ? 'bg-white dark:bg-brand-court text-slate-900 dark:text-white shadow-sm' : 'text-slate-500 dark:text-white/40'}`}
+              >
+                Open Game
+              </button>
+            </div>
+
+            {splitOption === 'split' && (
+              <div className="space-y-4 mb-6">
+                <p className="text-xs font-semibold text-slate-500 dark:text-white/40 uppercase tracking-wider">Add Friends' Phone Numbers</p>
+                {splitPhones.map((phone, idx) => (
+                  <input
+                    key={idx}
+                    type="tel"
+                    maxLength={10}
+                    placeholder={`Friend ${idx + 1} Phone`}
+                    value={phone}
+                    onChange={e => {
+                      const newPhones = [...splitPhones];
+                      newPhones[idx] = e.target.value.replace(/\D/g, '').slice(0, 10);
+                      setSplitPhones(newPhones);
+                    }}
+                    className="w-full bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] text-slate-900 dark:text-white px-4 py-3 rounded-xl font-semibold outline-none focus:border-brand-court focus:ring-2 focus:ring-brand-court/20"
+                  />
+                ))}
+              </div>
+            )}
+
+            {splitOption === 'open' && (
+              <div className="space-y-4 mb-6">
+                <p className="text-xs font-semibold text-slate-500 dark:text-white/40 uppercase tracking-wider">Configure Open Game</p>
+                
+                <div>
+                  <label className="text-xs text-slate-500 dark:text-white/60 mb-2 block font-medium">Spots Needed</label>
+                  <div className="flex space-x-2">
+                    {[1, 2, 3].map(n => (
+                      <button 
+                        key={n}
+                        onClick={() => setOpenSlots(n)}
+                        className={`flex-1 py-2 rounded-lg text-sm font-bold border transition-colors ${openSlots === n ? 'bg-brand-court/10 border-brand-court text-brand-court' : 'bg-transparent border-slate-200 dark:border-white/10 text-slate-600 dark:text-white/60'}`}
+                      >
+                        {n}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                <div>
+                  <label className="text-xs text-slate-500 dark:text-white/60 mb-2 block font-medium">Required Skill Level</label>
+                  <select 
+                    value={requiredSkill} 
+                    onChange={e => setRequiredSkill(e.target.value)}
+                    className="w-full bg-slate-50 dark:bg-white/[0.03] border border-slate-200 dark:border-white/[0.08] text-slate-900 dark:text-white px-4 py-3 rounded-xl font-semibold outline-none focus:border-brand-court focus:ring-2 focus:ring-brand-court/20"
+                  >
+                    <option value="Open to All">Open to All</option>
+                    <option value="Beginner">Beginner</option>
+                    <option value="Intermediate">Intermediate</option>
+                    <option value="Advanced">Advanced</option>
+                  </select>
+                </div>
+                
+                <p className="text-[10px] text-brand-court bg-brand-court/10 p-2 rounded-lg font-medium">
+                  You will pay ₹200 now. Your game will be listed on the Community tab for others to join!
+                </p>
+              </div>
+            )}
+
+            <div className="flex space-x-3">
+              <button 
+                onClick={() => setIsBookingModalOpen(false)} 
+                className="flex-1 py-4 rounded-xl font-bold text-sm bg-slate-100 dark:bg-white/10 text-slate-600 dark:text-white/60 active:scale-95 transition-transform"
+              >
+                Cancel
+              </button>
+              <Button 
+                onClick={handleConfirmAndPay}
+                className="flex-1 py-4 rounded-xl font-bold text-sm bg-brand-court text-white active:scale-95 transition-transform border-0 shadow-[0_4px_15px_rgba(155,159,96,0.3)]"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? 'Processing...' : 'Confirm & Book'}
+              </Button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Mock Payment Gateway Modal */}
+      {mockCheckoutSplitId && (
+        <div className="fixed inset-0 z-[60] flex items-center justify-center bg-black/80 backdrop-blur-md">
+          <div className="w-full max-w-sm bg-white dark:bg-[#0f1523] rounded-3xl p-8 text-center shadow-[0_0_50px_rgba(155,159,96,0.15)] border border-brand-court/20">
+            <div className="w-16 h-16 bg-brand-court/20 rounded-full flex items-center justify-center mx-auto mb-6">
+              <span className="text-2xl font-bold text-brand-court">₹</span>
+            </div>
+            <h3 className="text-xl font-extrabold text-slate-900 dark:text-white mb-2">Mock Razorpay Checkout</h3>
+            <p className="text-sm text-slate-500 dark:text-white/60 mb-8">This simulates a successful payment gateway callback.</p>
+            
+            <Button 
+              onClick={() => processMockPayment(mockCheckoutSplitId)}
+              className="w-full py-4 rounded-xl font-bold text-sm bg-brand-court text-white active:scale-95 transition-transform border-0"
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? 'Paying...' : 'Simulate Payment Success'}
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {/* Floating Navigation Dock */}
+      <div className="fixed bottom-6 left-1/2 -translate-x-1/2 z-30">
+        <div className="bg-white dark:bg-white/[0.05] dark:backdrop-blur-2xl border border-slate-200 dark:border-white/10 px-6 py-3 rounded-full flex items-center space-x-8 shadow-lg dark:shadow-[0_10px_40px_rgba(0,0,0,0.8)] transition-colors">
+          <button 
+            onClick={() => setActiveTab('courts')} 
+            className={`flex flex-col items-center justify-center w-12 transition-all active:scale-90 ${activeTab === 'courts' ? 'text-brand-court dark:drop-shadow-[0_0_10px_rgba(0,180,216,0.5)]' : 'text-slate-400 dark:text-white/40 hover:text-slate-600 dark:hover:text-white/70'}`}
+          >
+            <Calendar className="w-5 h-5 mb-1" />
+            <span className="text-[9px] font-bold tracking-wide">Courts</span>
+          </button>
+          
+          <button 
+            onClick={() => setActiveTab('cafe')} 
+            className={`flex flex-col items-center justify-center w-12 transition-all active:scale-90 ${activeTab === 'cafe' ? 'text-brand-cafe dark:drop-shadow-[0_0_10px_rgba(217,160,91,0.5)]' : 'text-slate-400 dark:text-white/40 hover:text-slate-600 dark:hover:text-white/70'}`}
+          >
+            <Coffee className="w-5 h-5 mb-1" />
+            <span className="text-[9px] font-bold tracking-wide">Cafe</span>
+          </button>
+
+          <button 
+            onClick={() => setActiveTab('community')} 
+            className={`flex flex-col items-center justify-center w-12 transition-all active:scale-90 ${activeTab === 'community' ? 'text-emerald-500 dark:drop-shadow-[0_0_10px_rgba(16,185,129,0.5)]' : 'text-slate-400 dark:text-white/40 hover:text-slate-600 dark:hover:text-white/70'}`}
+          >
+            <Users className="w-5 h-5 mb-1" />
+            <span className="text-[9px] font-bold tracking-wide">Play</span>
+          </button>
+          
+          <button 
+            onClick={() => setActiveTab('profile')} 
+            className={`flex flex-col items-center justify-center w-12 transition-all active:scale-90 ${activeTab === 'profile' ? 'text-slate-900 dark:text-white dark:drop-shadow-[0_0_10px_rgba(255,255,255,0.5)]' : 'text-slate-400 dark:text-white/40 hover:text-slate-600 dark:hover:text-white/70'}`}
+          >
+            <User className="w-5 h-5 mb-1" />
+            <span className="text-[9px] font-bold tracking-wide">Profile</span>
+          </button>
+        </div>
+      </div>
     </main>
   );
 }

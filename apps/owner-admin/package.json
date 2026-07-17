@@ -9,13 +9,14 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0",
-    "next": "^16.2.10",
-    "lucide-react": "^0.378.0",
-    "@paddle-club/ui": "*",
+    "@ducanh2912/next-pwa": "^10.2.9",
+    "@paddle-club/db": "*",
     "@paddle-club/feature-flags": "*",
-    "@paddle-club/db": "*"
+    "@paddle-club/ui": "*",
+    "lucide-react": "^0.378.0",
+    "next": "^16.2.10",
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "typescript": "^5.4.5",

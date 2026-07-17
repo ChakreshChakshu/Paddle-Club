@@ -18,7 +18,7 @@ const displayFont = Space_Grotesk({
 
 export const metadata: Metadata = {
   title: 'The Paddle Club App',
-  description: 'Book pickleball courts and Cafe Brio menu items.',
+  description: 'Book Pickleball, Skyball, and Badminton courts and Cafe Brio menu items.',
   manifest: '/manifest.json',
 };
 
@@ -36,21 +36,6 @@ export default function RootLayout({
       </head>
       <body className="font-sans antialiased min-h-screen bg-brand-dark text-slate-100">
         {children}
-        <script
-          dangerouslySetInnerHTML={{
-            __html: `
-              if ('serviceWorker' in navigator) {
-                window.addEventListener('load', function() {
-                  navigator.serviceWorker.register('/sw.js').then(function(reg) {
-                    console.log('SW registered:', reg.scope);
-                  }).catch(function(err) {
-                    console.error('SW registration failed:', err);
-                  });
-                });
-              }
-            `
-          }}
-        />
       </body>
     </html>
   );

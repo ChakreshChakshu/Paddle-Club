@@ -32,11 +32,14 @@ async function main() {
   console.log(`Created admin user with id: ${adminUser.id}`);
 
   // 3. Wipe and Seed Courts
+  await prisma.paymentSplit.deleteMany();
   await prisma.booking.deleteMany();
   await prisma.court.deleteMany();
 
   const courts = [
-    { name: 'The Paddle Court', sportType: 'PICKLEBALL', surface: 'Aesthetic Acrylic', hourlyRate: 400, lighting: true },
+    { name: 'The Pickleball Court', sportType: 'PICKLEBALL', surface: 'Aesthetic Acrylic', hourlyRate: 400, lighting: true },
+    { name: 'The Skyball Arena', sportType: 'SKYBALL', surface: 'Aesthetic Acrylic', hourlyRate: 400, lighting: true },
+    { name: 'The Badminton Court', sportType: 'BADMINTON', surface: 'Aesthetic Acrylic', hourlyRate: 300, lighting: true },
   ];
 
   for (const courtData of courts) {

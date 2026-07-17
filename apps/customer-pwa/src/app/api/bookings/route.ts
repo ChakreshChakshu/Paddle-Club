@@ -1,10 +1,8 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { PrismaClient } from '@paddle-club/db';
 
 const prisma = new PrismaClient();
-
-// In V1, we are using a hardcoded test user.
-const TEST_USER_PHONE = '1234567890';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -47,7 +45,7 @@ export async function GET(request: Request) {
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { courtId, startTime, endTime } = body;
+    const { courtId, startTime, endTime, splitPhones, isPublic, openSlots, requiredSkill } = body;
 
     if (!courtId || !startTime || !endTime) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
@@ -57,10 +55,14 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Cannot book a time slot in the past' }, { status: 400 });
     }
 
-    // Use hardcoded user for prototype
-    let user = await prisma.user.findUnique({ where: { phone: TEST_USER_PHONE } });
+    const userId = cookies().get('paddle_club_user_id')?.value;
+    if (!userId) {
+       return NextResponse.json({ error: 'Unauthorized: Please log in' }, { status: 401 });
+    }
+
+    let user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) {
-       return NextResponse.json({ error: 'Test user not found in DB' }, { status: 500 });
+       return NextResponse.json({ error: 'User not found in DB' }, { status: 500 });
     }
 
     const start = new Date(startTime);
@@ -99,9 +101,32 @@ export async function POST(request: Request) {
         endTime: end,
         totalAmount,
         status: 'PENDING',
-        paymentStatus: 'PENDING'
+        paymentStatus: 'PENDING',
+        isPublic: isPublic || false,
+        openSlots: isPublic ? (openSlots || 0) : 0,
+        requiredSkill: isPublic ? requiredSkill : null
       }
     });
+
+    const splitArray: string[] = splitPhones && Array.isArray(splitPhones) && splitPhones.length > 0
+      ? [user.phone, ...splitPhones.filter(p => p !== user.phone)]
+      : [user.phone];
+
+    // For public games, we divide by 4. For private, we divide by the number of friends.
+    const splitAmount = isPublic ? (totalAmount / 4) : (totalAmount / splitArray.length);
+
+    await Promise.all(splitArray.map(async (phone) => {
+      const splitUser = await prisma.user.findUnique({ where: { phone } });
+      return prisma.paymentSplit.create({
+        data: {
+          bookingId: newBooking.id,
+          userId: splitUser?.id || null,
+          phone,
+          amount: splitAmount,
+          status: 'PENDING'
+        }
+      });
+    }));
 
     return NextResponse.json({ booking: newBooking }, { status: 201 });
   } catch (error) {

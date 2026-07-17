@@ -1,17 +1,22 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { PrismaClient } from '@paddle-club/db';
 
+export const dynamic = 'force-dynamic';
+
 const prisma = new PrismaClient();
-const TEST_USER_PHONE = '1234567890';
 
 export async function GET() {
   try {
-    const user = await prisma.user.findUnique({ where: { phone: TEST_USER_PHONE } });
+    const userId = cookies().get('paddle_club_user_id')?.value;
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
     const bookings = await prisma.booking.findMany({
       where: { userId: user.id },
-      include: { court: true },
+      include: { court: true, paymentSplits: true },
       orderBy: { startTime: 'desc' }
     });
 
@@ -27,7 +32,10 @@ export async function PATCH(request: Request) {
     const body = await request.json();
     const { bookingId } = body;
 
-    const user = await prisma.user.findUnique({ where: { phone: TEST_USER_PHONE } });
+    const userId = cookies().get('paddle_club_user_id')?.value;
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
     const booking = await prisma.booking.findUnique({ where: { id: bookingId } });

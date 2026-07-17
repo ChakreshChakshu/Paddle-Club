@@ -1,13 +1,13 @@
 import { NextResponse } from 'next/server';
+import { cookies } from 'next/headers';
 import { PrismaClient } from '@paddle-club/db';
 
 const prisma = new PrismaClient();
-const TEST_USER_PHONE = '1234567890';
 
 export async function POST(request: Request) {
   try {
     const body = await request.json();
-    const { cartItems, tableNumber } = body; // cartItems is array of { id, quantity }
+    const { cartItems, tableNumber } = body;
 
     if (!cartItems || cartItems.length === 0) {
       return NextResponse.json({ error: 'Cart is empty' }, { status: 400 });
@@ -16,10 +16,12 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Table or Court number is required' }, { status: 400 });
     }
 
-    const user = await prisma.user.findUnique({ where: { phone: TEST_USER_PHONE } });
+    const userId = cookies().get('paddle_club_user_id')?.value;
+    if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
+
+    const user = await prisma.user.findUnique({ where: { id: userId } });
     if (!user) return NextResponse.json({ error: 'User not found' }, { status: 404 });
 
-    // Validate items and recalculate price from DB
     let totalAmount = 0;
     const orderItems = [];
 
@@ -44,7 +46,7 @@ export async function POST(request: Request) {
     const newOrder = await prisma.order.create({
       data: {
         userId: user.id,
-        items: JSON.stringify(orderItems), // Serialize to JSON
+        items: JSON.stringify(orderItems),
         totalAmount,
         status: 'PENDING',
         tableNumber
