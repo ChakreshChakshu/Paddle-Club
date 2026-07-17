@@ -606,7 +606,13 @@ export default function CustomerPwaDashboard() {
                         <button
                           key={sport}
                           type="button"
-                          onClick={() => { setSelectedSportType(sport); setSelectedCourt(''); setSelectedSlot(''); }}
+                          onClick={() => { 
+                            setSelectedSportType(sport); 
+                            const filtered = courtsList.filter(c => sport === 'All' || c.sportType === sport);
+                            if (filtered.length === 1) setSelectedCourt(filtered[0].id);
+                            else setSelectedCourt('');
+                            setSelectedSlot(''); 
+                          }}
                           className={`px-4 py-1.5 rounded-full text-xs font-bold transition-all whitespace-nowrap active:scale-95 ${
                             selectedSportType === sport 
                               ? 'bg-brand-court text-white shadow-md' 
