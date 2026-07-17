@@ -23,7 +23,7 @@ export async function POST(req: Request) {
     }
 
     // Set a simple mock cookie to persist the role on the client if needed (though client state is enough for now)
-    cookies().set('admin-auth', user.id, { path: '/' });
+    (await cookies()).set('admin-auth', user.id, { path: '/' });
 
     return NextResponse.json({ user });
   } catch (error) {

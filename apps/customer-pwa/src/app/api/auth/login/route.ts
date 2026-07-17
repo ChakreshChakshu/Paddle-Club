@@ -19,7 +19,7 @@ export async function POST(req: Request) {
       });
     }
 
-    cookies().set('paddle_club_user_id', user.id, {
+    (await cookies()).set('paddle_club_user_id', user.id, {
       httpOnly: true,
       secure: process.env.NODE_ENV === 'production',
       sameSite: 'lax',

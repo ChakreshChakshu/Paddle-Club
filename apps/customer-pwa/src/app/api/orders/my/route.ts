@@ -7,7 +7,7 @@ export const dynamic = 'force-dynamic';
 
 export async function GET() {
   try {
-    const userId = cookies().get('paddle_club_user_id')?.value;
+    const userId = (await cookies()).get('paddle_club_user_id')?.value;
     if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const user = await prisma.user.findUnique({ where: { id: userId } });

@@ -56,3 +56,5 @@ Thumbs.db
 
 # Temp / Helper scripts
 copy_assets.js
+.vercel
+.env*

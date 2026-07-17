@@ -54,7 +54,7 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Cannot book a time slot in the past' }, { status: 400 });
     }
 
-    const userId = cookies().get('paddle_club_user_id')?.value;
+    const userId = (await cookies()).get('paddle_club_user_id')?.value;
     if (!userId) {
        return NextResponse.json({ error: 'Unauthorized: Please log in' }, { status: 401 });
     }

@@ -3,7 +3,7 @@
 import * as React from 'react';
 import { isEnabled } from '@paddle-club/feature-flags';
 import { Button } from '@paddle-club/ui';
-import { Calendar, Coffee, User, Users, Sparkles, ChevronRight, CheckCircle2, Clock, LogOut, Sun, Moon } from 'lucide-react';
+import { Calendar, Coffee, User, Users, Sparkles, Clock, LogOut, Sun, Moon } from 'lucide-react';
 import { Toaster, toast } from 'sonner';
 
 export default function CustomerPwaDashboard() {
