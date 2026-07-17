@@ -9,23 +9,24 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1",
-    "next": "^14.2.3",
-    "lucide-react": "^0.378.0",
-    "@paddle-club/ui": "*",
+    "@ducanh2912/next-pwa": "^10.2.9",
+    "@paddle-club/db": "*",
     "@paddle-club/feature-flags": "*",
-    "@paddle-club/db": "*"
+    "@paddle-club/ui": "*",
+    "lucide-react": "^0.378.0",
+    "next": "^14.2.3",
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
   },
   "devDependencies": {
-    "typescript": "^5.4.5",
+    "@paddle-club/tailwind-config": "*",
+    "@paddle-club/typescript-config": "*",
+    "@types/node": "^20.12.12",
     "@types/react": "^18.3.3",
     "@types/react-dom": "^18.3.0",
-    "@types/node": "^20.12.12",
-    "@paddle-club/typescript-config": "*",
-    "@paddle-club/tailwind-config": "*",
-    "tailwindcss": "^3.4.3",
+    "autoprefixer": "^10.4.19",
     "postcss": "^8.4.38",
-    "autoprefixer": "^10.4.19"
+    "tailwindcss": "^3.4.3",
+    "typescript": "^5.4.5"
   }
 }
